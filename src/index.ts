@@ -1,9 +1,10 @@
 import * as core from "@actions/core";
 import { App, BlockAction, LogLevel } from "@slack/bolt";
 import { WebClient } from "@slack/web-api";
-import { Option, isNone, isSome, none, some } from "fp-ts/lib/Option";
+import { Option, isSome, none, some } from "fp-ts/lib/Option";
 import { getGitHubInfo } from "./helper/github_info_helper";
 import { SlackApprovalInputs, getInputs } from "./helper/input_helper";
+import { isAuthorizedUser } from "./helper/user_helper";
 
 async function run(inputs: SlackApprovalInputs, app: App): Promise<void> {
 	try {
@@ -216,30 +217,6 @@ async function run(inputs: SlackApprovalInputs, app: App): Promise<void> {
 	} catch (error) {
 		if (error instanceof Error) core.setFailed(error.message);
 	}
-}
-
-function isAuthorizedUser(
-	userId: string,
-	authorizedUsers: Option<string[]>,
-	authorizedGroupMembers: Option<string[]>,
-): boolean {
-	if (isNone(authorizedUsers) && isNone(authorizedGroupMembers)) {
-		return true;
-	}
-
-	if (isSome(authorizedUsers)) {
-		if (authorizedUsers.value.includes(userId)) {
-			return true;
-		}
-	}
-
-	if (isSome(authorizedGroupMembers)) {
-		if (authorizedGroupMembers.value.includes(userId)) {
-			return true;
-		}
-	}
-
-	return false;
 }
 
 async function main() {
