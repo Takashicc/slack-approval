@@ -1,7 +1,7 @@
 import * as core from "@actions/core";
 import { App, BlockAction, LogLevel } from "@slack/bolt";
 import { WebClient } from "@slack/web-api";
-import { Option, isNone, isSome } from "fp-ts/lib/Option";
+import { Option, isNone, isSome, none, some } from "fp-ts/lib/Option";
 import { getGitHubInfo } from "./helper/github_info_helper";
 import { SlackApprovalInputs, getInputs } from "./helper/input_helper";
 
@@ -19,6 +19,28 @@ async function run(inputs: SlackApprovalInputs, app: App): Promise<void> {
 			title += `<!subteam^${inputs.mentionToGroup.value}>\n`;
 		}
 		title += "*GitHub Action Approval request*";
+
+		let authorizedGroupMembers: Option<string[]> = none;
+		if (isSome(inputs.authorizedGroups)) {
+			const members: string[] = [];
+			for (const group of inputs.authorizedGroups.value) {
+				try {
+					const usersInGroup = await web.usergroups.users.list({
+						usergroup: group,
+					});
+					if (!usersInGroup.ok) {
+						throw new Error(`Failed to get users in user group: ${group}`);
+					}
+					if (usersInGroup.users) {
+						members.push(...usersInGroup.users);
+					}
+				} catch (error) {
+					console.error(error);
+					process.exit(1);
+				}
+			}
+			authorizedGroupMembers = some(members);
+		}
 
 		(async () => {
 			await web.chat.postMessage({
@@ -100,7 +122,13 @@ async function run(inputs: SlackApprovalInputs, app: App): Promise<void> {
 				const userId = blockAction.user.id;
 				const ts = blockAction.message?.ts || "";
 
-				if (!isAuthorizedUser(userId, inputs.authorizedUsers)) {
+				if (
+					!isAuthorizedUser(
+						userId,
+						inputs.authorizedUsers,
+						authorizedGroupMembers,
+					)
+				) {
 					await client.chat.postMessage({
 						channel: inputs.channelId,
 						thread_ts: ts,
@@ -142,7 +170,13 @@ async function run(inputs: SlackApprovalInputs, app: App): Promise<void> {
 				const userId = blockAction.user.id;
 				const ts = blockAction.message?.ts || "";
 
-				if (!isAuthorizedUser(userId, inputs.authorizedUsers)) {
+				if (
+					!isAuthorizedUser(
+						userId,
+						inputs.authorizedUsers,
+						authorizedGroupMembers,
+					)
+				) {
 					await client.chat.postMessage({
 						channel: inputs.channelId,
 						thread_ts: ts,
@@ -187,12 +221,25 @@ async function run(inputs: SlackApprovalInputs, app: App): Promise<void> {
 function isAuthorizedUser(
 	userId: string,
 	authorizedUsers: Option<string[]>,
+	authorizedGroupMembers: Option<string[]>,
 ): boolean {
-	if (isNone(authorizedUsers)) {
+	if (isNone(authorizedUsers) && isNone(authorizedGroupMembers)) {
 		return true;
 	}
 
-	return authorizedUsers.value.includes(userId);
+	if (isSome(authorizedUsers)) {
+		if (authorizedUsers.value.includes(userId)) {
+			return true;
+		}
+	}
+
+	if (isSome(authorizedGroupMembers)) {
+		if (authorizedGroupMembers.value.includes(userId)) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 async function main() {

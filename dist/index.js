@@ -76809,6 +76809,7 @@ exports.Inputs = {
     MentionToUser: "mention-to-user",
     MentionToGroup: "mention-to-group",
     AuthorizedUsers: "authorized-users",
+    AuthorizedGroups: "authorized-groups",
 };
 
 
@@ -76885,6 +76886,7 @@ function getInputs() {
     const mentionToUser = getOptionalInput(constants_1.Inputs.MentionToUser);
     const mentionToGroup = getOptionalInput(constants_1.Inputs.MentionToGroup);
     const authorizedUsers = getOptionalListInput(constants_1.Inputs.AuthorizedUsers);
+    const authorizedGroups = getOptionalListInput(constants_1.Inputs.AuthorizedGroups);
     return {
         botToken,
         signingSecret,
@@ -76893,6 +76895,7 @@ function getInputs() {
         mentionToUser,
         mentionToGroup,
         authorizedUsers,
+        authorizedGroups,
     };
 }
 exports.getInputs = getInputs;
@@ -76979,6 +76982,28 @@ function run(inputs, app) {
                 title += `<!subteam^${inputs.mentionToGroup.value}>\n`;
             }
             title += "*GitHub Action Approval request*";
+            let authorizedGroupMembers = Option_1.none;
+            if ((0, Option_1.isSome)(inputs.authorizedGroups)) {
+                const members = [];
+                for (const group of inputs.authorizedGroups.value) {
+                    try {
+                        const usersInGroup = yield web.usergroups.users.list({
+                            usergroup: group,
+                        });
+                        if (!usersInGroup.ok) {
+                            throw new Error(`Failed to get users in user group: ${group}`);
+                        }
+                        if (usersInGroup.users) {
+                            members.push(...usersInGroup.users);
+                        }
+                    }
+                    catch (error) {
+                        console.error(error);
+                        process.exit(1);
+                    }
+                }
+                authorizedGroupMembers = (0, Option_1.some)(members);
+            }
             (() => __awaiter(this, void 0, void 0, function* () {
                 yield web.chat.postMessage({
                     channel: inputs.channelId,
@@ -77055,7 +77080,7 @@ function run(inputs, app) {
                 const blockAction = body;
                 const userId = blockAction.user.id;
                 const ts = ((_a = blockAction.message) === null || _a === void 0 ? void 0 : _a.ts) || "";
-                if (!isAuthorizedUser(userId, inputs.authorizedUsers)) {
+                if (!isAuthorizedUser(userId, inputs.authorizedUsers, authorizedGroupMembers)) {
                     yield client.chat.postMessage({
                         channel: inputs.channelId,
                         thread_ts: ts,
@@ -77090,7 +77115,7 @@ function run(inputs, app) {
                 const blockAction = body;
                 const userId = blockAction.user.id;
                 const ts = ((_c = blockAction.message) === null || _c === void 0 ? void 0 : _c.ts) || "";
-                if (!isAuthorizedUser(userId, inputs.authorizedUsers)) {
+                if (!isAuthorizedUser(userId, inputs.authorizedUsers, authorizedGroupMembers)) {
                     yield client.chat.postMessage({
                         channel: inputs.channelId,
                         thread_ts: ts,
@@ -77130,11 +77155,21 @@ function run(inputs, app) {
         }
     });
 }
-function isAuthorizedUser(userId, authorizedUsers) {
-    if ((0, Option_1.isNone)(authorizedUsers)) {
+function isAuthorizedUser(userId, authorizedUsers, authorizedGroupMembers) {
+    if ((0, Option_1.isNone)(authorizedUsers) && (0, Option_1.isNone)(authorizedGroupMembers)) {
         return true;
     }
-    return authorizedUsers.value.includes(userId);
+    if ((0, Option_1.isSome)(authorizedUsers)) {
+        if (authorizedUsers.value.includes(userId)) {
+            return true;
+        }
+    }
+    if ((0, Option_1.isSome)(authorizedGroupMembers)) {
+        if (authorizedGroupMembers.value.includes(userId)) {
+            return true;
+        }
+    }
+    return false;
 }
 function main() {
     return __awaiter(this, void 0, void 0, function* () {

@@ -29,6 +29,7 @@ jobs:
           mention-to-user: ${{ secrets.SLACK_MENTION_TO_USER }}
           mention-to-group: ${{ secrets.SLACK_MENTION_TO_GROUP }}
           authorized-users: ${{ secrets.SLACK_AUTHORIZED_USERS }}
+          authorized-groups: ${{ secrets.SLACK_AUTHORIZED_GROUPS }}
         timeout-minutes: 10
 ```
 
@@ -49,6 +50,11 @@ jobs:
     - Optional. Slack user IDs who are authorized to approve or reject. Comma separated.
     - e.g.,
       - `authorized-users: xxxxxx,yyyyyy`
+  - `authorized-groups`
+    - Optional. Slack group IDs who are authorized to approve or reject. Comma separated.
+    - **Add `usergroups:read` to OAuth Scope on OAuth & Permissions page.**
+    - e.g.,
+      - `authorized-groups: xxxxxx,yyyyy`
 
 - Set `timeout-minutes`
   - Set the time to wait for approval.
