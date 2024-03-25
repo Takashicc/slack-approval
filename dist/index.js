@@ -76874,7 +76874,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getInputs = void 0;
+exports.getOptionalListInput = exports.getOptionalInput = exports.getRequiredInput = exports.getInputs = void 0;
 const core = __importStar(__nccwpck_require__(42186));
 const Option_1 = __nccwpck_require__(2569);
 const constants_1 = __nccwpck_require__(69042);
@@ -76902,6 +76902,7 @@ exports.getInputs = getInputs;
 function getRequiredInput(name) {
     return core.getInput(name, { required: true });
 }
+exports.getRequiredInput = getRequiredInput;
 function getOptionalInput(name) {
     const value = core.getInput(name);
     if (value === "") {
@@ -76909,6 +76910,7 @@ function getOptionalInput(name) {
     }
     return (0, Option_1.some)(value);
 }
+exports.getOptionalInput = getOptionalInput;
 function getOptionalListInput(name) {
     const value = core.getInput(name);
     if (value === "") {
@@ -76921,6 +76923,36 @@ function getOptionalListInput(name) {
     }
     return (0, Option_1.some)(res);
 }
+exports.getOptionalListInput = getOptionalListInput;
+
+
+/***/ }),
+
+/***/ 57345:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isAuthorizedUser = void 0;
+const Option_1 = __nccwpck_require__(2569);
+function isAuthorizedUser(userId, authorizedUsers, authorizedGroupMembers) {
+    if ((0, Option_1.isNone)(authorizedUsers) && (0, Option_1.isNone)(authorizedGroupMembers)) {
+        return true;
+    }
+    if ((0, Option_1.isSome)(authorizedUsers)) {
+        if (authorizedUsers.value.includes(userId)) {
+            return true;
+        }
+    }
+    if ((0, Option_1.isSome)(authorizedGroupMembers)) {
+        if (authorizedGroupMembers.value.includes(userId)) {
+            return true;
+        }
+    }
+    return false;
+}
+exports.isAuthorizedUser = isAuthorizedUser;
 
 
 /***/ }),
@@ -76969,6 +77001,7 @@ const web_api_1 = __nccwpck_require__(60431);
 const Option_1 = __nccwpck_require__(2569);
 const github_info_helper_1 = __nccwpck_require__(70885);
 const input_helper_1 = __nccwpck_require__(9941);
+const user_helper_1 = __nccwpck_require__(57345);
 function run(inputs, app) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -77080,7 +77113,7 @@ function run(inputs, app) {
                 const blockAction = body;
                 const userId = blockAction.user.id;
                 const ts = ((_a = blockAction.message) === null || _a === void 0 ? void 0 : _a.ts) || "";
-                if (!isAuthorizedUser(userId, inputs.authorizedUsers, authorizedGroupMembers)) {
+                if (!(0, user_helper_1.isAuthorizedUser)(userId, inputs.authorizedUsers, authorizedGroupMembers)) {
                     yield client.chat.postMessage({
                         channel: inputs.channelId,
                         thread_ts: ts,
@@ -77115,7 +77148,7 @@ function run(inputs, app) {
                 const blockAction = body;
                 const userId = blockAction.user.id;
                 const ts = ((_c = blockAction.message) === null || _c === void 0 ? void 0 : _c.ts) || "";
-                if (!isAuthorizedUser(userId, inputs.authorizedUsers, authorizedGroupMembers)) {
+                if (!(0, user_helper_1.isAuthorizedUser)(userId, inputs.authorizedUsers, authorizedGroupMembers)) {
                     yield client.chat.postMessage({
                         channel: inputs.channelId,
                         thread_ts: ts,
@@ -77154,22 +77187,6 @@ function run(inputs, app) {
                 core.setFailed(error.message);
         }
     });
-}
-function isAuthorizedUser(userId, authorizedUsers, authorizedGroupMembers) {
-    if ((0, Option_1.isNone)(authorizedUsers) && (0, Option_1.isNone)(authorizedGroupMembers)) {
-        return true;
-    }
-    if ((0, Option_1.isSome)(authorizedUsers)) {
-        if (authorizedUsers.value.includes(userId)) {
-            return true;
-        }
-    }
-    if ((0, Option_1.isSome)(authorizedGroupMembers)) {
-        if (authorizedGroupMembers.value.includes(userId)) {
-            return true;
-        }
-    }
-    return false;
 }
 function main() {
     return __awaiter(this, void 0, void 0, function* () {

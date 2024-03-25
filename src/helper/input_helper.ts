@@ -35,11 +35,11 @@ export function getInputs(): SlackApprovalInputs {
 	};
 }
 
-function getRequiredInput(name: Inputs): string {
+export function getRequiredInput(name: Inputs): string {
 	return core.getInput(name, { required: true });
 }
 
-function getOptionalInput(name: Inputs): Option<string> {
+export function getOptionalInput(name: Inputs): Option<string> {
 	const value = core.getInput(name);
 	if (value === "") {
 		return none;
@@ -48,7 +48,7 @@ function getOptionalInput(name: Inputs): Option<string> {
 	return some(value);
 }
 
-function getOptionalListInput(name: Inputs): Option<string[]> {
+export function getOptionalListInput(name: Inputs): Option<string[]> {
 	const value = core.getInput(name);
 	if (value === "") {
 		return none;
