@@ -26,4 +26,5 @@ jobs:
           mention-to-user: ${{ secrets.SLACK_MENTION_TO_USER }}
           mention-to-group: ${{ secrets.SLACK_MENTION_TO_GROUP }}
           authorized-users: ${{ secrets.SLACK_AUTHORIZED_USERS }}
+          authorized-groups: ${{ secrets.SLACK_AUTHORIZED_GROUPS }}
         timeout-minutes: 5
