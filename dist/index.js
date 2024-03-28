@@ -77037,6 +77037,9 @@ function run(inputs, app) {
                 }
                 authorizedGroupMembers = (0, Option_1.some)(members);
             }
+            if ((0, Option_1.isSome)(authorizedGroupMembers)) {
+                authorizedGroupMembers = (0, Option_1.some)([...new Set(authorizedGroupMembers.value)]);
+            }
             (() => __awaiter(this, void 0, void 0, function* () {
                 yield web.chat.postMessage({
                     channel: inputs.channelId,

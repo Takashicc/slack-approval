@@ -42,6 +42,9 @@ async function run(inputs: SlackApprovalInputs, app: App): Promise<void> {
 			}
 			authorizedGroupMembers = some(members);
 		}
+		if (isSome(authorizedGroupMembers)) {
+			authorizedGroupMembers = some([...new Set(authorizedGroupMembers.value)]);
+		}
 
 		(async () => {
 			await web.chat.postMessage({
