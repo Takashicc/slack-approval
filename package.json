@@ -20,7 +20,7 @@
     "fp-ts": "^2.16.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.8.1",
+    "@biomejs/biome": "1.8.2",
     "@types/node": "^20.0.0",
     "@vercel/ncc": "^0.38.1",
     "typescript": "^4.8.4"
