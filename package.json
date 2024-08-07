@@ -1,6 +1,6 @@
 {
   "name": "slack-approval",
-  "version": "v1.1.0",
+  "version": "v1.1.1",
   "description": "Custom action to send approval request to Slack",
   "scripts": {
     "bundle": "npm run format && npm run lint && npm run check && npm run package",
