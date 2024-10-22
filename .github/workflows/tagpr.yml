@@ -13,6 +13,6 @@ jobs:
         with:
           token: ${{ secrets.GH_PAT }}
 
-      - uses: Songmu/tagpr@591c6e0c988bccee7dda02bce1af7a3b2dc47065 # v1
+      - uses: Songmu/tagpr@3c58530cabab695c842a8af46f30d14aa9b57317 # v1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
