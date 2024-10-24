@@ -20,12 +20,12 @@
     "fp-ts": "^2.16.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.2",
+    "@biomejs/biome": "1.9.3",
     "@types/node": "^20.0.0",
     "@vercel/ncc": "^0.38.1",
     "typescript": "^5.0.0"
   },
   "volta": {
-    "node": "20.17.0"
+    "node": "20.18.0"
   }
 }
