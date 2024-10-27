@@ -24,6 +24,9 @@ inputs:
   authorized-users:
     description: "Slack user IDs who are authorized to approve or reject"
     required: false
+  authorized-groups:
+    description: "Slack group IDs who are authorized to approve or reject"
+    required: false
 
 branding:
   icon: plus

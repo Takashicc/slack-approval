@@ -10,6 +10,7 @@ export type SlackApprovalInputs = {
 	mentionToUser: Option<string>;
 	mentionToGroup: Option<string>;
 	authorizedUsers: Option<string[]>;
+	authorizedGroups: Option<string[]>;
 };
 
 export function getInputs(): SlackApprovalInputs {
@@ -20,6 +21,7 @@ export function getInputs(): SlackApprovalInputs {
 	const mentionToUser = getOptionalInput(Inputs.MentionToUser);
 	const mentionToGroup = getOptionalInput(Inputs.MentionToGroup);
 	const authorizedUsers = getOptionalListInput(Inputs.AuthorizedUsers);
+	const authorizedGroups = getOptionalListInput(Inputs.AuthorizedGroups);
 
 	return {
 		botToken,
@@ -29,14 +31,15 @@ export function getInputs(): SlackApprovalInputs {
 		mentionToUser,
 		mentionToGroup,
 		authorizedUsers,
+		authorizedGroups,
 	};
 }
 
-function getRequiredInput(name: Inputs): string {
+export function getRequiredInput(name: Inputs): string {
 	return core.getInput(name, { required: true });
 }
 
-function getOptionalInput(name: Inputs): Option<string> {
+export function getOptionalInput(name: Inputs): Option<string> {
 	const value = core.getInput(name);
 	if (value === "") {
 		return none;
@@ -45,7 +48,7 @@ function getOptionalInput(name: Inputs): Option<string> {
 	return some(value);
 }
 
-function getOptionalListInput(name: Inputs): Option<string[]> {
+export function getOptionalListInput(name: Inputs): Option<string[]> {
 	const value = core.getInput(name);
 	if (value === "") {
 		return none;

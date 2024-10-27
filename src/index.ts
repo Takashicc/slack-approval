@@ -1,213 +1,240 @@
 import * as core from "@actions/core";
 import { App, LogLevel, type BlockAction } from "@slack/bolt";
 import { WebClient } from "@slack/web-api";
-import { isNone, isSome, type Option } from "fp-ts/lib/Option";
+import { isAuthorizedUser } from "./helper/user_helper";
+import { some, none, isSome, type Option } from "fp-ts/lib/Option";
 import { getGitHubInfo } from "./helper/github_info_helper";
 import { getInputs, type SlackApprovalInputs } from "./helper/input_helper";
 
 async function run(inputs: SlackApprovalInputs, app: App): Promise<void> {
-	try {
-		const web = new WebClient(inputs.botToken);
+  try {
+    const web = new WebClient(inputs.botToken);
 
-		const githubInfo = getGitHubInfo();
+    const githubInfo = getGitHubInfo();
 
-		let title = "";
-		if (isSome(inputs.mentionToUser)) {
-			title += `<@${inputs.mentionToUser.value}>\n`;
-		}
-		if (isSome(inputs.mentionToGroup)) {
-			title += `<!subteam^${inputs.mentionToGroup.value}>\n`;
-		}
-		title += "*GitHub Action Approval request*";
+    let title = "";
+    if (isSome(inputs.mentionToUser)) {
+      title += `<@${inputs.mentionToUser.value}>\n`;
+    }
+    if (isSome(inputs.mentionToGroup)) {
+      title += `<!subteam^${inputs.mentionToGroup.value}>\n`;
+    }
+    title += "*GitHub Action Approval request*";
 
-		(async () => {
-			await web.chat.postMessage({
-				channel: inputs.channelId,
-				blocks: [
-					{
-						type: "section",
-						text: {
-							type: "mrkdwn",
-							text: title,
-						},
-					},
-					{
-						type: "section",
-						fields: [
-							{
-								type: "mrkdwn",
-								text: `*GitHub Actor:*\n${githubInfo.actor}`,
-							},
-							{
-								type: "mrkdwn",
-								text: `*Repos:*\n${githubInfo.serverUrl}/${githubInfo.repo}`,
-							},
-							{
-								type: "mrkdwn",
-								text: `*Actions URL:*\n${githubInfo.actionUrl}`,
-							},
-							{
-								type: "mrkdwn",
-								text: `*GITHUB_RUN_ID:*\n${githubInfo.runId}`,
-							},
-							{
-								type: "mrkdwn",
-								text: `*Workflow:*\n${githubInfo.workflow}`,
-							},
-							{
-								type: "mrkdwn",
-								text: `*RunnerOS:*\n${githubInfo.runnerOS}`,
-							},
-						],
-					},
-					{
-						type: "actions",
-						elements: [
-							{
-								type: "button",
-								text: {
-									type: "plain_text",
-									emoji: true,
-									text: "Approve",
-								},
-								style: "primary",
-								value: "approve",
-								action_id: "slack-approval-approve",
-							},
-							{
-								type: "button",
-								text: {
-									type: "plain_text",
-									emoji: true,
-									text: "Reject",
-								},
-								style: "danger",
-								value: "reject",
-								action_id: "slack-approval-reject",
-							},
-						],
-					},
-				],
-			});
-		})();
+    let authorizedGroupMembers: Option<string[]> = none;
+    if (isSome(inputs.authorizedGroups)) {
+      const members: string[] = [];
+      for (const group of inputs.authorizedGroups.value) {
+        try {
+          const usersInGroup = await web.usergroups.users.list({
+            usergroup: group,
+          });
+          if (!usersInGroup.ok) {
+            throw new Error(`Failed to get users in user group: ${group}`);
+          }
+          if (usersInGroup.users) {
+            members.push(...usersInGroup.users);
+          }
+        } catch (error) {
+          console.error(error);
+          process.exit(1);
+        }
+      }
+      authorizedGroupMembers = some(members);
+    }
+    if (isSome(authorizedGroupMembers)) {
+      authorizedGroupMembers = some([...new Set(authorizedGroupMembers.value)]);
+    }
 
-		app.action(
-			"slack-approval-approve",
-			async ({ ack, client, body, logger }) => {
-				await ack();
+    (async () => {
+      await web.chat.postMessage({
+        channel: inputs.channelId,
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: title,
+            },
+          },
+          {
+            type: "section",
+            fields: [
+              {
+                type: "mrkdwn",
+                text: `*GitHub Actor:*\n${githubInfo.actor}`,
+              },
+              {
+                type: "mrkdwn",
+                text: `*Repos:*\n${githubInfo.serverUrl}/${githubInfo.repo}`,
+              },
+              {
+                type: "mrkdwn",
+                text: `*Actions URL:*\n${githubInfo.actionUrl}`,
+              },
+              {
+                type: "mrkdwn",
+                text: `*GITHUB_RUN_ID:*\n${githubInfo.runId}`,
+              },
+              {
+                type: "mrkdwn",
+                text: `*Workflow:*\n${githubInfo.workflow}`,
+              },
+              {
+                type: "mrkdwn",
+                text: `*RunnerOS:*\n${githubInfo.runnerOS}`,
+              },
+            ],
+          },
+          {
+            type: "actions",
+            elements: [
+              {
+                type: "button",
+                text: {
+                  type: "plain_text",
+                  emoji: true,
+                  text: "Approve",
+                },
+                style: "primary",
+                value: "approve",
+                action_id: "slack-approval-approve",
+              },
+              {
+                type: "button",
+                text: {
+                  type: "plain_text",
+                  emoji: true,
+                  text: "Reject",
+                },
+                style: "danger",
+                value: "reject",
+                action_id: "slack-approval-reject",
+              },
+            ],
+          },
+        ],
+      });
+    })();
 
-				const blockAction = <BlockAction>body;
-				const userId = blockAction.user.id;
-				const ts = blockAction.message?.ts || "";
+    app.action(
+      "slack-approval-approve",
+      async ({ ack, client, body, logger }) => {
+        await ack();
 
-				if (!isAuthorizedUser(userId, inputs.authorizedUsers)) {
-					await client.chat.postMessage({
-						channel: inputs.channelId,
-						thread_ts: ts,
-						text: `You are not authorized to approve this action: <@${userId}>`,
-					});
-					return;
-				}
+        const blockAction = <BlockAction>body;
+        const userId = blockAction.user.id;
+        const ts = blockAction.message?.ts || "";
 
-				try {
-					const response_blocks = blockAction.message?.blocks;
-					response_blocks.pop();
-					response_blocks.push({
-						type: "section",
-						text: {
-							type: "mrkdwn",
-							text: `Approved by <@${userId}> `,
-						},
-					});
+        if (
+          !isAuthorizedUser(
+            userId,
+            inputs.authorizedUsers,
+            authorizedGroupMembers
+          )
+        ) {
+          await client.chat.postMessage({
+            channel: inputs.channelId,
+            thread_ts: ts,
+            text: `You are not authorized to approve this action: <@${userId}>`,
+          });
+          return;
+        }
 
-					await client.chat.update({
-						channel: inputs.channelId,
-						ts: ts,
-						blocks: response_blocks,
-					});
-				} catch (error) {
-					logger.error(error);
-				}
+        try {
+          const response_blocks = blockAction.message?.blocks;
+          response_blocks.pop();
+          response_blocks.push({
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `Approved by <@${userId}> `,
+            },
+          });
 
-				process.exit(0);
-			},
-		);
+          await client.chat.update({
+            channel: inputs.channelId,
+            ts: ts,
+            blocks: response_blocks,
+          });
+        } catch (error) {
+          logger.error(error);
+        }
 
-		app.action(
-			"slack-approval-reject",
-			async ({ ack, client, body, logger }) => {
-				await ack();
+        process.exit(0);
+      }
+    );
 
-				const blockAction = <BlockAction>body;
-				const userId = blockAction.user.id;
-				const ts = blockAction.message?.ts || "";
+    app.action(
+      "slack-approval-reject",
+      async ({ ack, client, body, logger }) => {
+        await ack();
 
-				if (!isAuthorizedUser(userId, inputs.authorizedUsers)) {
-					await client.chat.postMessage({
-						channel: inputs.channelId,
-						thread_ts: ts,
-						text: `You are not authorized to reject this action: <@${userId}>`,
-					});
-					return;
-				}
+        const blockAction = <BlockAction>body;
+        const userId = blockAction.user.id;
+        const ts = blockAction.message?.ts || "";
 
-				try {
-					const response_blocks = blockAction.message?.blocks;
-					response_blocks.pop();
-					response_blocks.push({
-						type: "section",
-						text: {
-							type: "mrkdwn",
-							text: `Rejected by <@${userId}>`,
-						},
-					});
+        if (
+          !isAuthorizedUser(
+            userId,
+            inputs.authorizedUsers,
+            authorizedGroupMembers
+          )
+        ) {
+          await client.chat.postMessage({
+            channel: inputs.channelId,
+            thread_ts: ts,
+            text: `You are not authorized to reject this action: <@${userId}>`,
+          });
+          return;
+        }
 
-					await client.chat.update({
-						channel: inputs.channelId,
-						ts: ts,
-						blocks: response_blocks,
-					});
-				} catch (error) {
-					logger.error(error);
-				}
+        try {
+          const response_blocks = blockAction.message?.blocks;
+          response_blocks.pop();
+          response_blocks.push({
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `Rejected by <@${userId}>`,
+            },
+          });
 
-				process.exit(1);
-			},
-		);
+          await client.chat.update({
+            channel: inputs.channelId,
+            ts: ts,
+            blocks: response_blocks,
+          });
+        } catch (error) {
+          logger.error(error);
+        }
 
-		(async () => {
-			await app.start(3000);
-			console.log("Waiting Approval reaction.....");
-		})();
-	} catch (error) {
-		if (error instanceof Error) core.setFailed(error.message);
-	}
-}
+        process.exit(1);
+      }
+    );
 
-function isAuthorizedUser(
-	userId: string,
-	authorizedUsers: Option<string[]>,
-): boolean {
-	if (isNone(authorizedUsers)) {
-		return true;
-	}
-
-	return authorizedUsers.value.includes(userId);
+    (async () => {
+      await app.start(3000);
+      console.log("Waiting Approval reaction.....");
+    })();
+  } catch (error) {
+    if (error instanceof Error) core.setFailed(error.message);
+  }
 }
 
 async function main() {
-	const inputs = getInputs();
+  const inputs = getInputs();
 
-	const app = new App({
-		token: inputs.botToken,
-		signingSecret: inputs.signingSecret,
-		appToken: inputs.appToken,
-		socketMode: true,
-		port: 3000,
-		logLevel: LogLevel.DEBUG,
-	});
+  const app = new App({
+    token: inputs.botToken,
+    signingSecret: inputs.signingSecret,
+    appToken: inputs.appToken,
+    socketMode: true,
+    port: 3000,
+    logLevel: LogLevel.DEBUG,
+  });
 
-	run(inputs, app);
+  run(inputs, app);
 }
 
 main();
