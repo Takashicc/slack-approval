@@ -1,5 +1,5 @@
 import * as core from "@actions/core";
-import { Option, none, some } from "fp-ts/lib/Option";
+import { none, some, type Option } from "fp-ts/lib/Option";
 import { Inputs } from "../constants";
 
 export type SlackApprovalInputs = {

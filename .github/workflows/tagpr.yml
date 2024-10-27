@@ -9,10 +9,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           token: ${{ secrets.GH_PAT }}
 
-      - uses: Songmu/tagpr@v1
+      - uses: Songmu/tagpr@3c58530cabab695c842a8af46f30d14aa9b57317 # v1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
