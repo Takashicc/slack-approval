@@ -21,11 +21,11 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "@types/node": "^20.0.0",
+    "@types/node": "^22.0.0",
     "@vercel/ncc": "^0.38.1",
     "typescript": "^5.0.0"
   },
   "volta": {
-    "node": "20.18.1"
+    "node": "22.12.0"
   }
 }
