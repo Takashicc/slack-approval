@@ -1,0 +1,15 @@
+version: 3
+
+tasks:
+  default:
+    cmd: task -a --sort none
+
+  build-docker:
+    desc: Build Dockerfile
+    cmds:
+      - docker build -t slack-approval:latest .
+
+  run-docker:
+    desc: Run docker image
+    cmds:
+      - docker run slack-approval:latest
