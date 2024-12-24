@@ -16,3 +16,6 @@ serde = "1.0.216"
 slack-morphism = { version = "2.7", features = ["hyper"] }
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
+
+[dev-dependencies]
+rstest = "0.23.0"
