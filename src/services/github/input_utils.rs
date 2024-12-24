@@ -85,44 +85,89 @@ mod tests {
 
     #[rstest]
     #[case(
-        "required and trim",
+        "required but not set",
+        None,
         InputOptions {
             required: true,
             trim_whitespace: true,
         },
-        Ok(Some("b ar".to_string()))
+        Err("Input 'required but not set' is required".into())
     )]
     #[case(
-        "required and untrimmed",
+        "required but empty",
+        Some(""),
+        InputOptions {
+            required: true,
+            trim_whitespace: true,
+        },
+        Err("Input 'required but empty' cannot be empty".into())
+    )]
+    #[case(
+        "required and trimmed",
+        Some(" va lue  "),
+        InputOptions {
+            required: true,
+            trim_whitespace: true,
+        },
+        Ok(Some("va lue".into()))
+    )]
+    #[case(
+        "required but not trimmed",
+        Some(" va lue  "),
         InputOptions {
             required: true,
             trim_whitespace: false,
         },
-        Ok(Some(" b ar   ".to_string()))
-    )]
+        Ok(Some(" va lue  ".into())))
+    ]
     #[case(
-        "optional and untrimmed",
+        "optional but not set",
+        None,
         InputOptions {
             required: false,
             trim_whitespace: false,
         },
-        Ok(Some(" b ar   ".to_string()))
+        Ok(None)
     )]
     #[case(
-        "optional and trim",
+        "optional but empty",
+        Some(""),
+        InputOptions {
+            required: false,
+            trim_whitespace: false,
+        },
+        Ok(Some("".into()))
+    )]
+    #[case(
+        "optional and trimmed",
+        Some(" va lue  "),
         InputOptions {
             required: false,
             trim_whitespace: true,
         },
-        Ok(Some("b ar".to_string()))
+        Ok(Some("va lue".into()))
     )]
+    #[case(
+        "optional but not trimmed",
+        Some(" va lue  "),
+        InputOptions {
+            required: false,
+            trim_whitespace: false,
+        },
+        Ok(Some(" va lue  ".into())))
+    ]
     fn test_get_input(
         #[case] name: &str,
+        #[case] env_value: Option<&str>,
         #[case] options: InputOptions,
         #[case] expected: std::result::Result<Option<String>, String>,
     ) {
         let env_key = format!("{}{}", INPUT_PREFIX, name.replace(" ", "_").to_uppercase());
-        std::env::set_var(&env_key, " b ar   ");
+        std::env::remove_var(&env_key);
+
+        if let Some(val) = env_value {
+            std::env::set_var(&env_key, val);
+        }
 
         let actual = get_input(name, &options);
         let actual = actual.map_err(|e| e.to_string());
