@@ -13,3 +13,10 @@ tasks:
     desc: Run docker image
     cmds:
       - docker run slack-approval:latest
+
+  run:
+    desc: Run the application
+    cmds:
+      - cargo run
+    dotenv:
+      - .env
