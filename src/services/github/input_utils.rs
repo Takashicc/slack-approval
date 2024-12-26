@@ -29,7 +29,20 @@ fn get_input(name: &str, options: &InputOptions) -> Result<Option<String>> {
 }
 
 fn get_list_input(name: &str, options: &InputOptions) -> Result<Option<Vec<String>>> {
-    get_input(name, options).map(|o| o.map(|v| v.split(',').map(|s| s.trim().into()).collect()))
+    get_input(name, options).map(|o| {
+        o.map(|v| {
+            v.split(',')
+                .map(|s| {
+                    if options.trim_whitespace {
+                        s.trim().into()
+                    } else {
+                        s.into()
+                    }
+                })
+                .filter(|s: &String| !s.is_empty())
+                .collect::<Vec<String>>()
+        })
+    })
 }
 
 pub fn get_optional_input(name: &str) -> Result<Option<String>> {
@@ -81,7 +94,17 @@ pub fn get_required_list_input(name: &str) -> Result<Vec<String>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use anyhow::Result;
     use rstest::*;
+
+    fn initialize_env_variable(name: &str, env_value: Option<&str>) {
+        let env_key = format!("{}{}", INPUT_PREFIX, name.replace(" ", "_").to_uppercase());
+        std::env::remove_var(&env_key);
+
+        if let Some(val) = env_value {
+            std::env::set_var(&env_key, val);
+        }
+    }
 
     #[rstest]
     #[case(
@@ -160,14 +183,9 @@ mod tests {
         #[case] name: &str,
         #[case] env_value: Option<&str>,
         #[case] options: InputOptions,
-        #[case] expected: std::result::Result<Option<String>, String>,
+        #[case] expected: Result<Option<String>, String>,
     ) {
-        let env_key = format!("{}{}", INPUT_PREFIX, name.replace(" ", "_").to_uppercase());
-        std::env::remove_var(&env_key);
-
-        if let Some(val) = env_value {
-            std::env::set_var(&env_key, val);
-        }
+        initialize_env_variable(name, env_value);
 
         let actual = get_input(name, &options);
         let actual = actual.map_err(|e| e.to_string());
@@ -175,5 +193,141 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // TODO Add tests
+    #[rstest]
+    #[case(
+        "required but not set",
+        None,
+        InputOptions {
+            required: true,
+            trim_whitespace: true,
+        },
+        Err("Input 'required but not set' is required".into())
+    )]
+    #[case(
+        "required but empty",
+        Some(""),
+        InputOptions {
+            required: true,
+            trim_whitespace: true,
+        },
+        Err("Input 'required but empty' cannot be empty".into())
+    )]
+    #[case(
+        "values",
+        Some("v1, v2, v3"),
+        InputOptions {
+            required: true,
+            trim_whitespace: true,
+        },
+        Ok(Some(vec!["v1".into(), "v2".into(), "v3".into()]))
+    )]
+    #[case(
+        "values with empty",
+        Some("v1, , v3"),
+        InputOptions {
+            required: true,
+            trim_whitespace: true,
+        },
+        Ok(Some(vec!["v1".into(), "v3".into()]))
+    )]
+    #[case(
+        "values not trimmed",
+        Some("v1  , v2"),
+        InputOptions {
+            required: true,
+            trim_whitespace: false,
+        },
+        Ok(Some(vec!["v1  ".into(), " v2".into()]))
+    )]
+    #[case(
+        "empty value",
+        Some(""),
+        InputOptions {
+            required: false,
+            trim_whitespace: true,
+        },
+        Ok(Some(vec![]))
+    )]
+    #[case(
+        "none",
+        None,
+        InputOptions {
+            required: false,
+            trim_whitespace: false
+        },
+        Ok(None)
+    )]
+    fn test_get_list_input(
+        #[case] name: &str,
+        #[case] env_value: Option<&str>,
+        #[case] options: InputOptions,
+        #[case] expected: Result<Option<Vec<String>>, String>,
+    ) {
+        initialize_env_variable(name, env_value);
+
+        let actual = get_list_input(name, &options);
+        let actual = actual.map_err(|e| e.to_string());
+
+        assert_eq!(actual, expected);
+    }
+
+    #[rstest]
+    #[case("none", None, None)]
+    #[case("empty", Some(""), Some("".into()))]
+    #[case("value", Some("value"), Some("value".into()))]
+    fn test_get_optional_input(
+        #[case] name: &str,
+        #[case] env_value: Option<&str>,
+        #[case] expected: Option<String>,
+    ) {
+        initialize_env_variable(name, env_value);
+
+        let actual = get_optional_input(name).unwrap();
+        assert_eq!(actual, expected);
+    }
+
+    #[rstest]
+    #[case("none", None, Err("Input 'none' is required".into()))]
+    #[case("empty", Some(""), Err("Input 'empty' cannot be empty".into()))]
+    #[case("value", Some("value"), Ok("value".into()))]
+    fn test_get_required_input(
+        #[case] name: &str,
+        #[case] env_value: Option<&str>,
+        #[case] expected: Result<String, String>,
+    ) {
+        initialize_env_variable(name, env_value);
+
+        let actual = get_required_input(name).map_err(|e| e.to_string());
+        assert_eq!(actual, expected);
+    }
+
+    #[rstest]
+    #[case("none", None, None)]
+    #[case("empty", Some(""), Some(vec![]))]
+    #[case("value", Some("v1, v2"), Some(vec!["v1".into(), "v2".into()]))]
+    fn test_get_optional_list_input(
+        #[case] name: &str,
+        #[case] env_value: Option<&str>,
+        #[case] expected: Option<Vec<String>>,
+    ) {
+        initialize_env_variable(name, env_value);
+
+        let actual = get_optional_list_input(name).unwrap();
+        assert_eq!(actual, expected);
+    }
+
+    #[rstest]
+    #[case("none", None, Err("Input 'none' is required".into()))]
+    #[case("empty", Some(""), Err("Input 'empty' cannot be empty".into()))]
+    #[case("value", Some("v1, v2"), Ok(vec!["v1".into(), "v2".into()]))]
+    fn test_get_required_list_input(
+        #[case] name: &str,
+        #[case] env_value: Option<&str>,
+        #[case] expected: Result<Vec<String>, String>,
+    ) {
+        initialize_env_variable(name, env_value);
+
+        let actual = get_required_list_input(name).map_err(|e| e.to_string());
+        assert_eq!(actual, expected);
+    }
 }
