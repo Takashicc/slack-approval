@@ -7,7 +7,7 @@ use super::input_utils::{get_optional_list_input, get_required_input};
 pub struct GitHubInputs {
     pub bot_token: SlackApiTokenValue,
     pub signing_secret: SlackSigningSecret,
-    pub app_token: String,
+    pub app_token: SlackApiTokenValue,
     pub channel_id: SlackChannelId,
     pub mention_to_users: Option<Vec<String>>,
     pub mention_to_groups: Option<Vec<String>>,
@@ -18,7 +18,7 @@ pub struct GitHubInputs {
 pub fn read_github_inputs() -> Result<GitHubInputs> {
     let v = GitHubInputs {
         bot_token: get_required_input("bot_token")?.into(),
-        app_token: get_required_input("app_token")?,
+        app_token: get_required_input("app_token")?.into(),
         signing_secret: get_required_input("signing_secret")?.into(),
         channel_id: get_required_input("channel_id")?.into(),
         mention_to_users: get_optional_list_input("mention_to_users")?,
