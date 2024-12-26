@@ -1,5 +1,7 @@
 use anyhow::Result;
-use slack_morphism::{SlackApiTokenValue, SlackChannelId, SlackSigningSecret};
+use slack_morphism::{
+    SlackApiTokenValue, SlackChannelId, SlackSigningSecret, SlackUserGroupId, SlackUserId,
+};
 
 use super::input_utils::{get_list_input, get_required_input};
 
@@ -9,24 +11,30 @@ pub struct GitHubInputs {
     pub signing_secret: SlackSigningSecret,
     pub app_token: SlackApiTokenValue,
     pub channel_id: SlackChannelId,
-    pub mention_to_users: Vec<String>,
-    pub mention_to_groups: Vec<String>,
-    pub authorized_users: Vec<String>,
-    pub authorized_groups: Vec<String>,
+    pub mention_to_users: Vec<SlackUserId>,
+    pub mention_to_groups: Vec<SlackUserGroupId>,
+    pub authorized_users: Vec<SlackUserId>,
+    pub authorized_groups: Vec<SlackUserGroupId>,
 }
 
 pub fn read_github_inputs() -> Result<GitHubInputs> {
-    let v = GitHubInputs {
+    Ok(GitHubInputs {
         bot_token: get_required_input("bot_token")?.into(),
         app_token: get_required_input("app_token")?.into(),
         signing_secret: get_required_input("signing_secret")?.into(),
         channel_id: get_required_input("channel_id")?.into(),
-        mention_to_users: get_list_input("mention_to_users")?,
-        mention_to_groups: get_list_input("mention_to_groups")?,
-        authorized_users: get_list_input("authorized_users")?,
-        authorized_groups: get_list_input("authorized_groups")?,
-    };
-    Ok(v)
+        mention_to_users: to_slack_id(get_list_input("mention_to_users")?),
+        mention_to_groups: to_slack_id(get_list_input("mention_to_groups")?),
+        authorized_users: to_slack_id(get_list_input("authorized_users")?),
+        authorized_groups: to_slack_id(get_list_input("authorized_groups")?),
+    })
+}
+
+fn to_slack_id<T>(v: Vec<String>) -> Vec<T>
+where
+    T: From<String>,
+{
+    v.into_iter().map(|v| v.into()).collect()
 }
 
 #[cfg(test)]
