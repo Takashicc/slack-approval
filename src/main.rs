@@ -1,18 +1,15 @@
 use anyhow::Result;
-use tracing::{error, info};
 
 mod services;
 
-fn main() {
+#[tokio::main]
+async fn main() -> Result<()> {
     tracing_subscriber::fmt().init();
-    info!("Start");
-    if let Err(e) = execute() {
-        error!("{:?}", e);
-        return;
-    }
-    info!("End")
+    execute().await
 }
 
-fn execute() -> Result<()> {
-    Ok(())
+async fn execute() -> Result<()> {
+    let github_info = services::github::github_info::read_github_info()?;
+    let inputs = services::github::github_inputs::read_github_inputs()?;
+    services::slack::handle_slack_approval(&github_info, &inputs).await
 }
