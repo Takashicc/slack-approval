@@ -47,16 +47,6 @@ pub fn get_list_input(name: &str) -> Result<Vec<String>> {
     })
 }
 
-pub fn get_optional_input(name: &str) -> Result<Option<String>> {
-    get_input(
-        name,
-        &InputOptions {
-            required: false,
-            trim_whitespace: true,
-        },
-    )
-}
-
 pub fn get_required_input(name: &str) -> Result<String> {
     match get_input(
         name,
@@ -203,21 +193,6 @@ mod tests {
         let actual = get_list_input(name);
         let actual = actual.map_err(|e| e.to_string());
 
-        assert_eq!(actual, expected);
-    }
-
-    #[rstest]
-    #[case("none", None, None)]
-    #[case("empty", Some(""), Some("".into()))]
-    #[case("value", Some("value"), Some("value".into()))]
-    fn test_get_optional_input(
-        #[case] name: &str,
-        #[case] env_value: Option<&str>,
-        #[case] expected: Option<String>,
-    ) {
-        initialize_env_variable(name, env_value);
-
-        let actual = get_optional_input(name).unwrap();
         assert_eq!(actual, expected);
     }
 
