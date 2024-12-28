@@ -43,7 +43,7 @@ pub fn get_list_input(name: &str) -> Result<Vec<String>> {
                 .filter(|s: &String| !s.is_empty())
                 .collect::<Vec<String>>()
         })
-        .unwrap_or_else(|| vec![])
+        .unwrap_or_default()
     })
 }
 
