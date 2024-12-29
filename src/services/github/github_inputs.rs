@@ -1,14 +1,11 @@
 use anyhow::Result;
-use slack_morphism::{
-    SlackApiTokenValue, SlackChannelId, SlackSigningSecret, SlackUserGroupId, SlackUserId,
-};
+use slack_morphism::{SlackApiTokenValue, SlackChannelId, SlackUserGroupId, SlackUserId};
 
 use super::input_utils::{get_list_input, get_required_input};
 
 #[derive(PartialEq, Debug)]
 pub struct GitHubInputs {
     pub bot_token: SlackApiTokenValue,
-    pub signing_secret: SlackSigningSecret,
     pub app_token: SlackApiTokenValue,
     pub channel_id: SlackChannelId,
     pub mention_to_users: Vec<SlackUserId>,
@@ -21,7 +18,6 @@ pub fn read_github_inputs() -> Result<GitHubInputs> {
     Ok(GitHubInputs {
         bot_token: get_required_input("bot_token")?.into(),
         app_token: get_required_input("app_token")?.into(),
-        signing_secret: get_required_input("signing_secret")?.into(),
         channel_id: get_required_input("channel_id")?.into(),
         mention_to_users: to_slack_id(get_list_input("mention_to_users")?),
         mention_to_groups: to_slack_id(get_list_input("mention_to_groups")?),
@@ -45,7 +41,6 @@ mod tests {
     fn should_read_github_inputs() {
         std::env::set_var("INPUT_BOT_TOKEN", "xoxb-bot-token");
         std::env::set_var("INPUT_APP_TOKEN", "xapp-app-token");
-        std::env::set_var("INPUT_SIGNING_SECRET", "super_secret");
         std::env::set_var("INPUT_CHANNEL_ID", "C1234567890");
         std::env::set_var("INPUT_MENTION_TO_USERS", "U000001, U000002");
         std::env::set_var("INPUT_MENTION_TO_GROUPS", "G000001, G000002, G000003");
@@ -56,7 +51,6 @@ mod tests {
         let expected = GitHubInputs {
             bot_token: "xoxb-bot-token".into(),
             app_token: "xapp-app-token".into(),
-            signing_secret: "super_secret".into(),
             channel_id: "C1234567890".into(),
             mention_to_users: vec!["U000001".into(), "U000002".into()],
             mention_to_groups: vec!["G000001".into(), "G000002".into(), "G000003".into()],
