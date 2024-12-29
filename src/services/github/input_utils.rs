@@ -8,8 +8,8 @@ struct InputOptions {
 }
 
 fn get_input(name: &str, options: &InputOptions) -> Result<Option<String>> {
-    let key = format!("{}{}", INPUT_PREFIX, name.replace(" ", "_").to_uppercase());
-    let v = std::env::var(&key).ok();
+    let key = format!("{}{}", INPUT_PREFIX, name.replace(' ', "_").to_uppercase());
+    let v = std::env::var(key).ok();
 
     let v = if options.trim_whitespace {
         v.map(|v| v.trim().into())
