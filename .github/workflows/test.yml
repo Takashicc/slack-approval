@@ -7,23 +7,24 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   approval:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
-      - name: slack-approval
-        uses: ./
+      - uses: ./
         with:
           bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
-          signing-secret: ${{ secrets.SLACK_SIGNING_SECRET }}
           app-token: ${{ secrets.SLACK_APP_TOKEN }}
           channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
-          mention-to-user: ${{ secrets.SLACK_MENTION_TO_USER }}
-          mention-to-group: ${{ secrets.SLACK_MENTION_TO_GROUP }}
+          mention-to-users: ${{ secrets.SLACK_MENTION_TO_USER }}
+          mention-to-groups: ${{ secrets.SLACK_MENTION_TO_GROUP }}
           authorized-users: ${{ secrets.SLACK_AUTHORIZED_USERS }}
+          authorized-groups: ${{ secrets.SLACK_AUTHORIZED_GROUPS}}
         timeout-minutes: 5
