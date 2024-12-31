@@ -33,4 +33,4 @@
 	vPrefix = true
 	releaseBranch = main
 	changelog = false
-	versionFile = package.json,package-lock.json
+	versionFile = Cargo.toml, README.md
