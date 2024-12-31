@@ -7,7 +7,6 @@ edition = "2021"
 debug = false
 debug-assertions = false
 lto = true
-# TODO
 
 [dependencies]
 anyhow = "1.0.94"
