@@ -1,13 +1,10 @@
 name: slack-approval
 description: Custom action to send approval request to Slack from GitHub Actions
-author: varu3
+author: Takashicc
 
 inputs:
   bot-token:
     description: "Slack bot token"
-    required: true
-  signing-secret:
-    description: "Slack signing secret"
     required: true
   app-token:
     description: "Slack app token"
@@ -15,14 +12,17 @@ inputs:
   channel-id:
     description: "Slack channel ID"
     required: true
-  mention-to-user:
-    description: "Slack user ID to mention"
+  mention-to-users:
+    description: "Slack user IDs to mention"
     required: false
-  mention-to-group:
-    description: "Slack group ID to mention"
+  mention-to-groups:
+    description: "Slack group IDs to mention"
     required: false
   authorized-users:
     description: "Slack user IDs who are authorized to approve or reject"
+    required: false
+  authorized-groups:
+    description: "Slack group IDs who are authorized to approve or reject"
     required: false
 
 branding:
@@ -30,5 +30,5 @@ branding:
   color: green
 
 runs:
-  using: node20
-  main: dist/index.js
+  using: docker
+  image: Dockerfile
