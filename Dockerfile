@@ -1,9 +1,29 @@
 FROM rust:1.83.0 AS base
-RUN cargo install sccache --version ^0.9
-RUN cargo install cargo-chef --version ^0.1
+ARG WORKDIR=/app
+ARG TARGETARCH
+RUN set -eux; \
+  case "$TARGETARCH" in \
+    "amd64") \
+      wget https://github.com/mozilla/sccache/releases/download/v0.9.0/sccache-dist-v0.9.0-x86_64-unknown-linux-musl.tar.gz \
+      && tar xzf sccache-dist-v0.9.0-x86_64-unknown-linux-musl.tar.gz \
+      && mv sccache-dist-v0.9.0-x86_64-unknown-linux-musl/sccache /usr/local/bin/ \
+      && chmod +x /usr/local/bin/sccache \
+      ;; \
+    "arm64") \
+      wget https://github.com/mozilla/sccache/releases/download/v0.9.0/sccache-v0.9.0-aarch64-unknown-linux-musl.tar.gz \
+      && tar xzf sccache-v0.9.0-aarch64-unknown-linux-musl.tar.gz \
+      && mv sccache-v0.9.0-aarch64-unknown-linux-musl/sccache /usr/local/bin/ \
+      && chmod +x /usr/local/bin/sccache \
+      ;; \
+    *) \
+      echo "Unsupported architecture: $TARGETARCH"; \
+      echo "Install using cargo"; \
+      cargo install sccache --version ^0.9.0 \
+      ;; \
+  esac
+RUN cargo install cargo-chef --version ^0.1.68
 ENV RUSTC_WRAPPER=sccache SCCACHE_DIR=/sccache
 ENV CARGO_INCREMENTAL=0
-ARG WORKDIR=/app
 
 FROM base AS planner
 WORKDIR ${WORKDIR}
