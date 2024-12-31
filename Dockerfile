@@ -6,14 +6,11 @@ ARG WORKDIR=/app
 WORKDIR ${WORKDIR}
 
 ENV CARGO_INCREMENTAL=0
-RUN --mount=type=bind,source=src,target=src \
-    --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
-    --mount=type=bind,source=Cargo.lock,target=Cargo.lock \
-    --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,target=${WORKDIR}/target \
-    cargo build --release
+COPY . .
+RUN pwd && ls -la ./
+RUN cargo build --release
 
-RUN pwd && ls -la ../
+RUN pwd && ls -la ./
 
 FROM scratch
 
