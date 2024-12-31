@@ -12,7 +12,7 @@ tasks:
   run-docker:
     desc: Run docker image
     cmds:
-      - docker run slack-approval:latest
+      - docker run slack-approval:latest -e ./.env
 
   run:
     desc: Run the application
