@@ -13,6 +13,9 @@ RUN --mount=type=bind,source=src,target=src \
     --mount=type=cache,target=${WORKDIR}/target \
     cargo build --release
 
+RUN ls -la target/
+RUN ls -la target/release/
+
 FROM scratch
 
 COPY --from=builder /app/target/release/slack-approval /slack-approval
