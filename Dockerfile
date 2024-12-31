@@ -5,6 +5,7 @@ RUN apk add --no-cache build-base musl-dev
 ARG WORKDIR=/app
 WORKDIR ${WORKDIR}
 
+ENV CARGO_INCREMENTAL=0
 RUN --mount=type=bind,source=src,target=src \
     --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
     --mount=type=bind,source=Cargo.lock,target=Cargo.lock \
