@@ -23,8 +23,8 @@ jobs:
           bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
           app-token: ${{ secrets.SLACK_APP_TOKEN }}
           channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
-          mention-to-users: ${{ secrets.SLACK_MENTION_TO_USER }}
-          mention-to-groups: ${{ secrets.SLACK_MENTION_TO_GROUP }}
-          authorized-users: ${{ secrets.SLACK_AUTHORIZED_USERS }}
-          authorized-groups: ${{ secrets.SLACK_AUTHORIZED_GROUPS}}
+          mention-to-users: ${{ secrets.MENTION_TO_USERS }}
+          mention-to-groups: ${{ secrets.MENTION_TO_GROUPS }}
+          authorized-users: ${{ secrets.AUTHORIZED_USERS }}
+          authorized-groups: ${{ secrets.AUTHORIZED_GROUPS }}
         timeout-minutes: 5
