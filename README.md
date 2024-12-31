@@ -1,6 +1,6 @@
 # slack-approval
 
-> [!WARN]
+> [!WARNING]
 > UNDER CONSTRUCTION!
 > Please reference the [older version README](https://github.com/Takashicc/slack-approval/blob/298fa3048bf704e769b8195396433c094b5d9668/README.md).
 > Also, Use the `Takashicc/slack-approval@v1.1.0`. NOT `main`.
@@ -15,11 +15,10 @@ Custom action to send approval request to Slack
 
 ## How To Use
 
-- First, create a Slack App and install in your workspace.
-- Second, add `chat:write` and `im:write` to OAuth Scope on OAuth & Permissions page.
-    > [!NOTE]
-    > When you want to use `authorized-groups`, you must add `usergroups:read` too.
-- Finally, **Enable Socket Mode**.
+1. Create a Slack App and install in your workspace.
+2. Add `chat:write` and `im:write` to OAuth Scope on OAuth & Permissions page.
+   1. (Optional) When you want to use `authorized-groups`, you must add `usergroups:read` too.
+3. Finally, **Enable Socket Mode**.
 
 ```yml
 jobs:
