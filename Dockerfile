@@ -13,7 +13,7 @@ RUN --mount=type=bind,source=src,target=src \
     --mount=type=cache,target=${WORKDIR}/target \
     cargo build --release
 
-RUN pwd && ls -la
+RUN pwd && ls -la ../
 
 FROM scratch
 
