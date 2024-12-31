@@ -6,13 +6,27 @@ tasks:
 
   build-docker:
     desc: Build Dockerfile
+    vars:
+      GHCR_USER:
+        sh: gh config get -h github.com user | awk '{print tolower($0)}'
     cmds:
-      - docker build -t slack-approval:latest .
+      - docker build -t ghcr.io/{{.GHCR_USER}}/slack-approval:latest .
 
   run-docker:
     desc: Run docker image
+    vars:
+      GHCR_USER:
+        sh: gh config get -h github.com user | awk '{print tolower($0)}'
     cmds:
-      - docker run slack-approval:latest -e ./.env
+      - docker run ghcr.io/{{.GHCR_USER}}/slack-approval:latest -e ./.env
+
+  push-docker-to-github:
+    desc: Push docker image to GitHub Container Registry
+    vars:
+      GHCR_USER:
+        sh: gh config get -h github.com user | awk '{print tolower($0)}'
+    cmds:
+      - docker push ghcr.io/{{.GHCR_USER}}/slack-approval:latest
 
   run:
     desc: Run the application
