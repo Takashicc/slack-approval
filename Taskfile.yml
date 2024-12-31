@@ -10,7 +10,7 @@ tasks:
       GHCR_USER:
         sh: gh config get -h github.com user | awk '{print tolower($0)}'
     cmds:
-      - docker build -t ghcr.io/{{.GHCR_USER}}/slack-approval:latest .
+      - docker buildx build --progress plain -t ghcr.io/{{.GHCR_USER}}/slack-approval:latest {{.CLI_ARGS}} .
 
   run-docker:
     desc: Run docker image
