@@ -4,9 +4,9 @@ ARG TARGETARCH
 RUN set -eux; \
   case "$TARGETARCH" in \
     "amd64") \
-      wget https://github.com/mozilla/sccache/releases/download/v0.9.0/sccache-dist-v0.9.0-x86_64-unknown-linux-musl.tar.gz \
-      && tar xzf sccache-dist-v0.9.0-x86_64-unknown-linux-musl.tar.gz \
-      && mv sccache-dist-v0.9.0-x86_64-unknown-linux-musl/sccache-dist /usr/local/bin/sccache \
+      wget https://github.com/mozilla/sccache/releases/download/v0.9.0/sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz \
+      && tar xzf sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz \
+      && mv sccache-v0.9.0-x86_64-unknown-linux-musl/sccache /usr/local/bin \
       && chmod +x /usr/local/bin/sccache \
       ;; \
     "arm64") \
