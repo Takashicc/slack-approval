@@ -30,5 +30,5 @@ branding:
   color: green
 
 runs:
-  using: docker
-  image: ghcr.io/takashicc/slack-approval:latest
+  using: "docker"
+  image: "docker://ghcr.io/takashicc/slack-approval:latest"
