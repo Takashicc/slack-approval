@@ -1,0 +1,21 @@
+[package]
+name = "slack-approval"
+version = "0.1.0"
+edition = "2021"
+
+[profile.release]
+debug = false
+debug-assertions = false
+lto = true
+
+[dependencies]
+anyhow = "1.0.94"
+envy = "0.4.2"
+serde = "1.0.216"
+slack-morphism = { version = "2.7", features = ["hyper"] }
+tokio = { version = "1.42.0", features = ["full"] }
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
+
+[dev-dependencies]
+rstest = "0.23.0"

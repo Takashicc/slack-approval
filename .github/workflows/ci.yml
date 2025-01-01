@@ -1,41 +1,78 @@
 name: CI
 
 on:
+  push:
+    branches: [main]
   pull_request:
-    paths:
-      - .github/workflows/ci.yml
-      - src/**
-      - .gitignore
-      - package-lock.json
-      - package.json
-      - tsconfig.json
+    paths-ignore:
+      - img/**
+      - /.tagpr
+      - /action.yml
+      - README.md
+      - renovate.json
+      - Taskfile.yml
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  RUSTFLAGS: "-Dwarnings"
+
 jobs:
-  ci:
-    name: CI
+  before-build-checks:
+    name: Before build checks
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4
+      - uses: actions/cache@v4
         with:
-          node-version: 20.9.0
-          cache: "npm"
-
-      - name: Install Dependencies
-        run: npm install
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Format
-        run: npm run format
+        run: cargo fmt --all --check --verbose
 
-      - name: Lint
-        run: npm run lint
+      - name: Clippy
+        run: cargo clippy --all-targets --all-features
 
-      - name: Check
-        run: npm run check
+      - name: Check packages
+        run: cargo check --locked --verbose
+
+      - name: Test
+        run: cargo test --verbose
+
+  build:
+    needs: before-build-checks
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v6
+        with:
+          push: false
+          file: Dockerfile
+          tags: takashicc/slack-approval:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
