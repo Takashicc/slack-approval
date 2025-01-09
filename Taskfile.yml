@@ -18,7 +18,7 @@ tasks:
       GHCR_USER:
         sh: gh config get -h github.com user | awk '{print tolower($0)}'
     cmds:
-      - docker run ghcr.io/{{.GHCR_USER}}/slack-approval:latest -e ./.env
+      - docker run --env-file ./.env ghcr.io/{{.GHCR_USER}}/slack-approval:latest
 
   push-docker-to-github:
     desc: Push docker image to GitHub Container Registry
