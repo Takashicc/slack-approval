@@ -1,6 +1,7 @@
-FROM rust:1.83.0 AS base
+FROM rust:1.83.0-alpine AS base
 ARG WORKDIR=/app
 ARG TARGETARCH
+RUN apk add musl-dev ca-certificates
 RUN set -eux; \
   case "$TARGETARCH" in \
     "amd64") \
@@ -44,5 +45,6 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
     cargo build --release
 
 FROM scratch
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /app/target/release/slack-approval /slack-approval
 CMD [ "/slack-approval" ]
