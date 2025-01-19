@@ -5,7 +5,7 @@
 > Please reference the [older version README](https://github.com/Takashicc/slack-approval/blob/298fa3048bf704e769b8195396433c094b5d9668/README.md).
 > Also, Use the `Takashicc/slack-approval@v1.1.0`. NOT `main`.
 
-Custom action to send approval request to Slack
+Custom action to send approval request to Slack.
 
 ![](/img/approval.png)
 
@@ -25,8 +25,7 @@ jobs:
   approval:
     runs-on: ubuntu-latest
     steps:
-      - name: send approval
-        uses: Takashicc/slack-approval@main
+      - uses: Takashicc/slack-approval@main
         with:
           bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
           app-token: ${{ secrets.SLACK_APP_TOKEN }}
@@ -38,21 +37,23 @@ jobs:
         timeout-minutes: 10
 ```
 
-- Set args
-  - `bot-token`
-    - Bot-level tokens on `OAuth & Permissions page`. (starting with `xoxb-` )
-  - `app-token`
-    - App-level tokens on `Basic Information page`. (starting with `xapp-` )
-  - `channel-id`
-    - Channel ID for which you want to send approval.
-  - `mention-to-users`
-    - Optional. Slack user IDs to mention. Comma separated.
-  - `mention-to-groups`
-    - Optional. Slack group IDs to mention. Comma separated.
-  - `authorized-users`
-    - Optional. Slack user IDs who are authorized to approve or reject. Comma separated.
-  - `authorized-groups`
-    - Optional. Slack group IDs who are authorized to approve or reject. Comma separated.
+- About parameters
+  - Required
+    - `bot-token`
+      - Bot-level tokens on `OAuth & Permissions page`. (starting with `xoxb-` )
+    - `app-token`
+      - App-level tokens on `Basic Information page`. (starting with `xapp-` )
+    - `channel-id`
+      - Channel ID for which you want to send approval.
+  - Optional
+    - `mention-to-users`
+      - Slack user IDs to mention. Comma separated.
+    - `mention-to-groups`
+      - Slack group IDs to mention. Comma separated.
+    - `authorized-users`
+      - Slack user IDs who are authorized to approve or reject. Comma separated.
+    - `authorized-groups`
+      - Slack group IDs who are authorized to approve or reject. Comma separated.
 
-- Set `timeout-minutes`
+- `timeout-minutes`
   - Set the time to wait for approval.
