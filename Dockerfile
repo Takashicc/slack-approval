@@ -1,4 +1,4 @@
-FROM rust:1.83.0-alpine AS base
+FROM rust:1.83.0-alpine@sha256:0ac946ed7597a9f053a1be2ce38c09aa88b3d7079a91ea491493615294b1f699 AS base
 ARG WORKDIR=/app
 ARG TARGETARCH
 RUN apk add musl-dev ca-certificates
