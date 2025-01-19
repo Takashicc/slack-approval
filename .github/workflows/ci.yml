@@ -4,13 +4,13 @@ on:
   push:
     branches: [main]
   pull_request:
-    paths-ignore:
-      - img/**
-      - /.tagpr
-      - /action.yml
-      - README.md
-      - renovate.json
-      - Taskfile.yml
+    paths:
+      - .github/workflows/ci.yml
+      - src/**
+      - .dockerignore
+      - Cargo.lock
+      - Cargo.toml
+      - Dockerfile
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
