@@ -25,7 +25,7 @@ jobs:
   approval:
     runs-on: ubuntu-latest
     steps:
-      - uses: Takashicc/slack-approval@main
+      - uses: Takashicc/slack-approval@v1.1.0
         with:
           bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
           app-token: ${{ secrets.SLACK_APP_TOKEN }}
