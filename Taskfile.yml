@@ -1,0 +1,36 @@
+version: 3
+
+tasks:
+  default:
+    cmd: task -a --sort none
+
+  build-docker:
+    desc: Build Dockerfile
+    vars:
+      GHCR_USER:
+        sh: gh config get -h github.com user | awk '{print tolower($0)}'
+    cmds:
+      - docker buildx build --progress plain -t ghcr.io/{{.GHCR_USER}}/slack-approval:latest {{.CLI_ARGS}} .
+
+  run-docker:
+    desc: Run docker image
+    vars:
+      GHCR_USER:
+        sh: gh config get -h github.com user | awk '{print tolower($0)}'
+    cmds:
+      - docker run --env-file ./.env ghcr.io/{{.GHCR_USER}}/slack-approval:latest
+
+  push-docker-to-github:
+    desc: Push docker image to GitHub Container Registry
+    vars:
+      GHCR_USER:
+        sh: gh config get -h github.com user | awk '{print tolower($0)}'
+    cmds:
+      - docker push ghcr.io/{{.GHCR_USER}}/slack-approval:latest
+
+  run:
+    desc: Run the application
+    cmds:
+      - cargo run
+    dotenv:
+      - .env

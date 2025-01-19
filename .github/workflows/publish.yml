@@ -1,0 +1,28 @@
+name: Publish image to GitHub registry
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get the repository name
+        id: get-repo-name
+        run: echo "name=${GITHUB_REPOSITORY@L}" >> "$GITHUB_OUTPUT"
+
+      - run: echo '${{ steps.get-repo-name.outputs.name }}'
+
+      # TODO
