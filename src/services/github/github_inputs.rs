@@ -16,13 +16,13 @@ pub struct GitHubInputs {
 
 pub fn read_github_inputs() -> Result<GitHubInputs> {
     Ok(GitHubInputs {
-        bot_token: get_required_input("bot_token")?.into(),
-        app_token: get_required_input("app_token")?.into(),
-        channel_id: get_required_input("channel_id")?.into(),
-        mention_to_users: to_slack_id(get_list_input("mention_to_users")?),
-        mention_to_groups: to_slack_id(get_list_input("mention_to_groups")?),
-        authorized_users: to_slack_id(get_list_input("authorized_users")?),
-        authorized_groups: to_slack_id(get_list_input("authorized_groups")?),
+        bot_token: get_required_input("bot-token")?.into(),
+        app_token: get_required_input("app-token")?.into(),
+        channel_id: get_required_input("channel-id")?.into(),
+        mention_to_users: to_slack_id(get_list_input("mention-to-users")?),
+        mention_to_groups: to_slack_id(get_list_input("mention-to-groups")?),
+        authorized_users: to_slack_id(get_list_input("authorized-users")?),
+        authorized_groups: to_slack_id(get_list_input("authorized-groups")?),
     })
 }
 
@@ -39,13 +39,13 @@ mod tests {
 
     #[test]
     fn should_read_github_inputs() {
-        std::env::set_var("INPUT_BOT_TOKEN", "xoxb-bot-token");
-        std::env::set_var("INPUT_APP_TOKEN", "xapp-app-token");
-        std::env::set_var("INPUT_CHANNEL_ID", "C1234567890");
-        std::env::set_var("INPUT_MENTION_TO_USERS", "U000001, U000002");
-        std::env::set_var("INPUT_MENTION_TO_GROUPS", "G000001, G000002, G000003");
-        std::env::set_var("INPUT_AUTHORIZED_USERS", "U000010, U000011");
-        std::env::set_var("INPUT_AUTHORIZED_GROUPS", "G000031, G000032");
+        std::env::set_var("INPUT_BOT-TOKEN", "xoxb-bot-token");
+        std::env::set_var("INPUT_APP-TOKEN", "xapp-app-token");
+        std::env::set_var("INPUT_CHANNEL-ID", "C1234567890");
+        std::env::set_var("INPUT_MENTION-TO-USERS", "U000001, U000002");
+        std::env::set_var("INPUT_MENTION-TO-GROUPS", "G000001, G000002, G000003");
+        std::env::set_var("INPUT_AUTHORIZED-USERS", "U000010, U000011");
+        std::env::set_var("INPUT_AUTHORIZED-GROUPS", "G000031, G000032");
 
         let actual = read_github_inputs().unwrap();
         let expected = GitHubInputs {
