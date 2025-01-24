@@ -31,4 +31,4 @@ branding:
 
 runs:
   using: "docker"
-  image: "docker://ghcr.io/takashicc/slack-approval:latest" # TODO Change it to version. also add this file to .tagpr
+  image: "docker://ghcr.io/takashicc/slack-approval:v2.0.0"

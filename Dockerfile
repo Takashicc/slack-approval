@@ -1,4 +1,8 @@
 FROM rust:1.84.0-alpine@sha256:0cfc78e96e5314e8279cec9faf3067744764ff58cc6a87a3f9c89217f8c4aa16 AS base
+
+LABEL org.opencontainers.image.source=https://github.com/Takashicc/slack-approval
+LABEL org.opencontainers.image.description="Custom action to send approval request to Slack."
+
 ARG WORKDIR=/app
 ARG TARGETARCH
 RUN apk add musl-dev ca-certificates

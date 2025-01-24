@@ -33,4 +33,4 @@
 	vPrefix = true
 	releaseBranch = main
 	changelog = false
-	versionFile = Cargo.toml, README.md
+	versionFile = Cargo.toml, README.md, action.yml
