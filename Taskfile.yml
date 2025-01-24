@@ -34,3 +34,7 @@ tasks:
       - cargo run
     dotenv:
       - .env
+
+  lint:
+    desc: Lint
+    cmd: cargo clippy --all-targets --all-features
