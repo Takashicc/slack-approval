@@ -6,15 +6,21 @@ on:
       - main
 
 jobs:
-  deploy:
+  tagpr:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: write
-      pull-requests: write
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
 
-      - uses: Songmu/tagpr@e89d37247ca73d3e5620bf074a53fbd5b39e66b0 # v1
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      - id: tagpr
+        uses: Songmu/tagpr@e89d37247ca73d3e5620bf074a53fbd5b39e66b0 # v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}

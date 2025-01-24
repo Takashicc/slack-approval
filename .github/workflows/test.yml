@@ -2,6 +2,13 @@ name: Test slack-approval
 
 on:
   workflow_dispatch:
+    inputs:
+      runner:
+        type: choice
+        options:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+        required: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -13,11 +20,10 @@ defaults:
 
 jobs:
   approval:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner }}
     timeout-minutes: 10
     permissions:
       contents: read
-      packages: read
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
