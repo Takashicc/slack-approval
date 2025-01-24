@@ -3,7 +3,7 @@
 > [!WARNING]
 > UNDER CONSTRUCTION!
 > Please reference the [older version README](https://github.com/Takashicc/slack-approval/blob/298fa3048bf704e769b8195396433c094b5d9668/README.md).
-> Also, Use the `Takashicc/slack-approval@v2.0.0`. NOT `main`.
+> Also, Use the `Takashicc/slack-approval@v1.1.0`. NOT `main`.
 
 Custom action to send approval request to Slack.
 
@@ -25,7 +25,7 @@ jobs:
   approval:
     runs-on: ubuntu-latest
     steps:
-      - uses: Takashicc/slack-approval@v1.1.0
+      - uses: Takashicc/slack-approval@v2.0.0
         with:
           bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
           app-token: ${{ secrets.SLACK_APP_TOKEN }}
