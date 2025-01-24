@@ -9,40 +9,18 @@ jobs:
   tagpr:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    permissions:
-      contents: write
-      pull-requests: write
-    outputs:
-      tag: ${{ steps.tagpr.outputs.tag }}
     steps:
+      - id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
 
       - id: tagpr
         uses: Songmu/tagpr@e89d37247ca73d3e5620bf074a53fbd5b39e66b0 # v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  release:
-    needs: tagpr
-    if: ${{ needs.tagpr.outputs.tag != '' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: linux/amd64
-            runner: ubuntu-latest
-          - platform: linux/arm64
-            runner: ubuntu-24.04-arm # NOTE public review
-    runs-on: ${{ matrix.runner }}
-    permissions:
-      contents: read
-      packages: write
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-
-      - uses: ./.github/actions/release/
-        with:
-          platform: ${{ matrix.platform }}
-          version: ${{ needs.tagpr.outputs.tag }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
