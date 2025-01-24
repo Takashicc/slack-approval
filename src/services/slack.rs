@@ -238,8 +238,8 @@ fn build_content(github_inputs: &GitHubInputs, github_info: &GitHubInfo) -> Slac
     ])
 }
 
-async fn fetch_user_ids_from_groups<'a, SCHC>(
-    session: &SlackClientSession<'a, SCHC>,
+async fn fetch_user_ids_from_groups<SCHC>(
+    session: &SlackClientSession<'_, SCHC>,
     authorized_groups: &Vec<SlackUserGroupId>,
 ) -> Result<Vec<SlackUserId>>
 where
@@ -261,8 +261,8 @@ where
     Ok(user_ids)
 }
 
-async fn collect_authorized_users<'a, SCHC>(
-    session: &SlackClientSession<'a, SCHC>,
+async fn collect_authorized_users<SCHC>(
+    session: &SlackClientSession<'_, SCHC>,
     github_inputs: &GitHubInputs,
 ) -> Result<Vec<SlackUserId>>
 where
