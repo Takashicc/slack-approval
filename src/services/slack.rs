@@ -126,7 +126,7 @@ async fn approve_action<SDHC>(
     session: &SlackClientSession<'_, SDHC>,
     state: &SlackApprovalActionState,
     user_id: &SlackUserId,
-    blocks: &Vec<SlackBlock>,
+    blocks: &[SlackBlock],
     ts: &SlackTs,
 ) -> Result<bool>
 where
@@ -134,7 +134,7 @@ where
 {
     info!("Approve button clicked by: {}", user_id);
 
-    if !is_authorized_user(&user_id, &state.authorized_users) {
+    if !is_authorized_user(user_id, &state.authorized_users) {
         info!("User is not authorized to approve: {}", user_id);
 
         let content = SlackMessageContent::new().with_text(format!(
@@ -147,7 +147,7 @@ where
     }
 
     info!("User is authorized to approve: {}", user_id);
-    let mut response_blocks = blocks.clone();
+    let mut response_blocks = blocks.to_vec();
     response_blocks.pop();
     response_blocks
         .push(SlackBlock::Section(SlackSectionBlock::new().with_text(
@@ -165,7 +165,7 @@ async fn reject_action<SDHC>(
     session: &SlackClientSession<'_, SDHC>,
     state: &SlackApprovalActionState,
     user_id: &SlackUserId,
-    blocks: &Vec<SlackBlock>,
+    blocks: &[SlackBlock],
     ts: &SlackTs,
 ) -> Result<bool>
 where
@@ -173,7 +173,7 @@ where
 {
     info!("Reject button clicked by: {}", user_id);
 
-    if !is_authorized_user(&user_id, &state.authorized_users) {
+    if !is_authorized_user(user_id, &state.authorized_users) {
         info!("User is not authorized to reject: {}", user_id);
 
         let content = SlackMessageContent::new().with_text(format!(
@@ -186,7 +186,7 @@ where
     }
 
     info!("User is authorized to reject: {}", user_id);
-    let mut response_blocks = blocks.clone();
+    let mut response_blocks = blocks.to_vec();
     response_blocks.pop();
     response_blocks
         .push(SlackBlock::Section(SlackSectionBlock::new().with_text(
