@@ -96,6 +96,7 @@ async fn handle_slack_interaction_events(
                                 if should_exit {
                                     std::process::exit(0);
                                 }
+                                return Ok(());
                             }
                         }
                     }
@@ -106,10 +107,9 @@ async fn handle_slack_interaction_events(
                                 if should_exit {
                                     std::process::exit(1);
                                 }
+                                return Ok(());
                             }
                         }
-
-                        std::process::exit(1);
                     }
                     _ => unimplemented!("Action not implemented: {:?}", action.action_id.0),
                 }
