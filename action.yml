@@ -31,4 +31,4 @@ branding:
 
 runs:
   using: "docker"
-  image: "docker://ghcr.io/takashicc/slack-approval:2.0.0"
+  image: "docker://ghcr.io/takashicc/slack-approval:2.0.1"
