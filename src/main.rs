@@ -1,11 +1,17 @@
 use anyhow::Result;
+use tracing::error;
 
 mod services;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt().init();
-    execute().await
+    if let Err(e) = execute().await {
+        error!("Error occurred: {:?}", e);
+        std::process::exit(1);
+    }
+
+    Ok(())
 }
 
 async fn execute() -> Result<()> {
