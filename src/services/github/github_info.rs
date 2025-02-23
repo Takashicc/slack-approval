@@ -12,14 +12,14 @@ pub struct GitHubInfo {
 }
 
 impl GitHubInfo {
-    pub fn get_action_url(&self) -> String {
+    pub fn action_url(&self) -> String {
         format!(
             "{}/{}/actions/runs/{}",
             self.github_server_url, self.github_repository, self.github_run_id
         )
     }
 
-    pub fn get_repository_url(&self) -> String {
+    pub fn repository_url(&self) -> String {
         format!("{}/{}", self.github_server_url, self.github_repository)
     }
 }
@@ -53,11 +53,11 @@ mod tests {
         let actual = read_github_info().unwrap();
         assert_eq!(actual, expected);
         assert_eq!(
-            actual.get_action_url(),
+            actual.action_url(),
             "https://github.com/octocat/Hello-World/actions/runs/42"
         );
         assert_eq!(
-            actual.get_repository_url(),
+            actual.repository_url(),
             "https://github.com/octocat/Hello-World"
         );
     }

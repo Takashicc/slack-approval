@@ -230,11 +230,8 @@ fn build_content(github_inputs: &GitHubInputs, github_info: &GitHubInfo) -> Slac
         some_into(SlackSectionBlock::new().with_text(md!(build_header(github_inputs)))),
         some_into(SlackSectionBlock::new().with_fields(vec![
             md!(format!("*Actor:*\n{}", github_info.github_actor)),
-            md!(format!(
-                "*Repository:*\n{}",
-                github_info.get_repository_url()
-            )),
-            md!(format!("*Action:*\n{}", github_info.get_action_url())),
+            md!(format!("*Repository:*\n{}", github_info.repository_url())),
+            md!(format!("*Action:*\n{}", github_info.action_url())),
             md!(format!("*Run ID:*\n{}", github_info.github_run_id)),
             md!(format!("*Workflow:*\n{}", github_info.github_workflow)),
             md!(format!("*Runner:*\n{}", github_info.runner_os))
