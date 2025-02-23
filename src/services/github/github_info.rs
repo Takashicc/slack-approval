@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -25,7 +25,8 @@ impl GitHubInfo {
 }
 
 pub fn read_github_info() -> Result<GitHubInfo> {
-    Ok(envy::from_env::<GitHubInfo>()?)
+    Ok(envy::from_env::<GitHubInfo>()
+        .with_context(|| "Failed to read GitHub info from environment variables")?)
 }
 
 #[cfg(test)]
