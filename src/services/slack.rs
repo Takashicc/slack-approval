@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use slack_morphism::prelude::*;
 use tracing::info;
 
@@ -15,23 +15,22 @@ pub async fn handle_slack_approval(
     github_info: &GitHubInfo,
     github_inputs: &GitHubInputs,
 ) -> Result<()> {
-    let client = Arc::new(SlackClient::new(SlackClientHyperHttpsConnector::new()?));
+    let client = Arc::new(SlackClient::new(
+        SlackClientHyperHttpsConnector::new().with_context(|| "Failed to create slack client")?,
+    ));
     let token = SlackApiToken::new(github_inputs.bot_token.clone());
     let session = client.open_session(&token);
 
-    // TODO First call the status endpoint to check the token is valid?
-    // let test = session
-    //     .api_test(&SlackApiTestRequest::new().with_foo("Test".into()))
-    //     .await?;
+    let authorized_users = collect_authorized_users(&session, github_inputs)
+        .await
+        .with_context(|| "Failed to collect authorized users")?;
 
-    let authorized_users = collect_authorized_users(&session, github_inputs).await?;
-
-    session
-        .chat_post_message(&SlackApiChatPostMessageRequest::new(
-            github_inputs.channel_id.clone(),
-            build_content(github_inputs, github_info),
-        ))
-        .await?;
+    post_message(
+        &session,
+        &github_inputs.channel_id,
+        build_content(github_inputs, github_info),
+    )
+    .await?;
 
     let listener_environment = Arc::new(
         SlackClientEventsListenerEnvironment::new(client.clone()).with_user_state(
@@ -51,10 +50,9 @@ pub async fn handle_slack_approval(
     );
     socket_mode_listener
         .listen_for(&SlackApiToken::new(github_inputs.app_token.clone()))
-        .await?;
-
-    let res = socket_mode_listener.serve().await;
-    info!("Socket mode listener result: {:?}", res);
+        .await
+        .with_context(|| "Failed to listen for slack socket mode. Have you enabled socket mode in your slack app?")?;
+    socket_mode_listener.serve().await;
 
     Ok(())
 }
@@ -75,100 +73,43 @@ async fn handle_slack_interaction_events(
             let user_state_read = user_state.read().await;
             let state = user_state_read
                 .get_user_state::<SlackApprovalActionState>()
-                .ok_or("Cannot get state")?;
+                .with_context(|| "Failed to get slack approval action state")?;
 
             let user_id = block_actions.user.unwrap().id;
             let ts = block_actions.message.clone().unwrap().origin.ts;
+            let blocks = block_actions
+                .message
+                .clone()
+                .unwrap()
+                .content
+                .blocks
+                .unwrap();
 
             let session = client.open_session(&state.api_token);
 
             if let Some(action) = block_actions.actions.unwrap().into_iter().next() {
                 match action.action_id.0.as_ref() {
                     SLACK_APPROVAL_APPROVE_ACTION_ID => {
-                        info!("Approve button clicked by: {}", user_id);
-
-                        if !is_authorized_user(&user_id, &state.authorized_users) {
-                            info!("User is not authorized to approve: {}", user_id);
-                            session
-                                .chat_post_message(&SlackApiChatPostMessageRequest::new(
-                                    state.channel_id.clone(),
-                                    SlackMessageContent::new().with_text(format!(
-                                        "You are not authorized to approve this action: <@{}>",
-                                        user_id
-                                    )),
-                                ))
-                                .await?;
-                            return Ok(());
+                        match approve_action(&session, state, &user_id, &blocks, &ts).await {
+                            Err(e) => return Err(e.into()),
+                            Ok(should_exit) => {
+                                if should_exit {
+                                    std::process::exit(0);
+                                }
+                                return Ok(());
+                            }
                         }
-
-                        info!("User is authorized to approve: {}", user_id);
-                        let mut response_blocks = block_actions
-                            .message
-                            .clone()
-                            .unwrap()
-                            .content
-                            .blocks
-                            .unwrap();
-                        response_blocks.pop();
-                        response_blocks.push(SlackBlock::Section(
-                            SlackSectionBlock::new().with_text(md!(format!(
-                                "Approved by {}",
-                                user_id.to_slack_format()
-                            ))),
-                        ));
-
-                        session
-                            .chat_update(&SlackApiChatUpdateRequest::new(
-                                state.channel_id.clone(),
-                                SlackMessageContent::new().with_blocks(response_blocks),
-                                ts.clone(),
-                            ))
-                            .await?;
-
-                        std::process::exit(0);
                     }
                     SLACK_APPROVAL_REJECT_ACTION_ID => {
-                        info!("Reject button clicked by: {}", user_id);
-
-                        if !is_authorized_user(&user_id, &state.authorized_users) {
-                            info!("User is not authorized to reject: {}", user_id);
-                            session
-                                .chat_post_message(&SlackApiChatPostMessageRequest::new(
-                                    state.channel_id.clone(),
-                                    SlackMessageContent::new().with_text(format!(
-                                        "You are not authorized to reject this action: <@{}>",
-                                        user_id
-                                    )),
-                                ))
-                                .await?;
-                            return Ok(());
+                        match reject_action(&session, state, &user_id, &blocks, &ts).await {
+                            Err(e) => return Err(e.into()),
+                            Ok(should_exit) => {
+                                if should_exit {
+                                    std::process::exit(1);
+                                }
+                                return Ok(());
+                            }
                         }
-
-                        info!("User is authorized to reject: {}", user_id);
-                        let mut response_blocks = block_actions
-                            .message
-                            .clone()
-                            .unwrap()
-                            .content
-                            .blocks
-                            .unwrap();
-                        response_blocks.pop();
-                        response_blocks.push(SlackBlock::Section(
-                            SlackSectionBlock::new().with_text(md!(format!(
-                                "Rejected by {}",
-                                user_id.to_slack_format()
-                            ))),
-                        ));
-
-                        session
-                            .chat_update(&SlackApiChatUpdateRequest::new(
-                                state.channel_id.clone(),
-                                SlackMessageContent::new().with_blocks(response_blocks),
-                                ts.clone(),
-                            ))
-                            .await?;
-
-                        std::process::exit(1);
                     }
                     _ => unimplemented!("Action not implemented: {:?}", action.action_id.0),
                 }
@@ -179,6 +120,84 @@ async fn handle_slack_interaction_events(
     Ok(())
 }
 
+// When user clicks on approve button
+// Returns true when the right user clicks on the approve button
+async fn approve_action<SDHC>(
+    session: &SlackClientSession<'_, SDHC>,
+    state: &SlackApprovalActionState,
+    user_id: &SlackUserId,
+    blocks: &[SlackBlock],
+    ts: &SlackTs,
+) -> Result<bool>
+where
+    SDHC: SlackClientHttpConnector + Send,
+{
+    info!("Approve button clicked by: {}", user_id);
+
+    if !is_authorized_user(user_id, &state.authorized_users) {
+        info!("User is not authorized to approve: {}", user_id);
+
+        let content = SlackMessageContent::new().with_text(format!(
+            "You are not authorized to approve this action: {}",
+            user_id
+        ));
+        post_message(session, &state.channel_id, content).await?;
+
+        return Ok(false);
+    }
+
+    info!("User is authorized to approve: {}", user_id);
+    let mut response_blocks = blocks.to_vec();
+    response_blocks.pop();
+    response_blocks
+        .push(SlackBlock::Section(SlackSectionBlock::new().with_text(
+            md!(format!("Approved by {}", user_id.to_slack_format())),
+        )));
+
+    update_message(session, &state.channel_id, response_blocks, ts).await?;
+
+    Ok(true)
+}
+
+// When user clicks on reject button
+// Returns true when the right user clicks on the reject button
+async fn reject_action<SDHC>(
+    session: &SlackClientSession<'_, SDHC>,
+    state: &SlackApprovalActionState,
+    user_id: &SlackUserId,
+    blocks: &[SlackBlock],
+    ts: &SlackTs,
+) -> Result<bool>
+where
+    SDHC: SlackClientHttpConnector + Send,
+{
+    info!("Reject button clicked by: {}", user_id);
+
+    if !is_authorized_user(user_id, &state.authorized_users) {
+        info!("User is not authorized to reject: {}", user_id);
+
+        let content = SlackMessageContent::new().with_text(format!(
+            "You are not authorized to reject this action: {}",
+            user_id
+        ));
+        post_message(session, &state.channel_id, content).await?;
+
+        return Ok(false);
+    }
+
+    info!("User is authorized to reject: {}", user_id);
+    let mut response_blocks = blocks.to_vec();
+    response_blocks.pop();
+    response_blocks
+        .push(SlackBlock::Section(SlackSectionBlock::new().with_text(
+            md!(format!("Rejected by {}", user_id.to_slack_format())),
+        )));
+
+    update_message(session, &state.channel_id, response_blocks, ts).await?;
+
+    Ok(true)
+}
+
 fn build_header(inputs: &GitHubInputs) -> String {
     let mut header = String::new();
     if !inputs.mention_to_users.is_empty() {
@@ -186,7 +205,7 @@ fn build_header(inputs: &GitHubInputs) -> String {
             &inputs
                 .mention_to_users
                 .iter()
-                .map(|user| format!("<@{}>", user))
+                .map(|user| user.to_slack_format())
                 .collect::<Vec<String>>()
                 .join(" "),
         );
@@ -197,7 +216,7 @@ fn build_header(inputs: &GitHubInputs) -> String {
             &inputs
                 .mention_to_groups
                 .iter()
-                .map(|group| format!("<!subteam^{}>", group))
+                .map(|group| group.to_slack_format())
                 .collect::<Vec<String>>()
                 .join(" "),
         );
@@ -211,11 +230,8 @@ fn build_content(github_inputs: &GitHubInputs, github_info: &GitHubInfo) -> Slac
         some_into(SlackSectionBlock::new().with_text(md!(build_header(github_inputs)))),
         some_into(SlackSectionBlock::new().with_fields(vec![
             md!(format!("*Actor:*\n{}", github_info.github_actor)),
-            md!(format!(
-                "*Repository:*\n{}",
-                github_info.get_repository_url()
-            )),
-            md!(format!("*Action:*\n{}", github_info.get_action_url())),
+            md!(format!("*Repository:*\n{}", github_info.repository_url())),
+            md!(format!("*Action:*\n{}", github_info.action_url())),
             md!(format!("*Run ID:*\n{}", github_info.github_run_id)),
             md!(format!("*Workflow:*\n{}", github_info.github_workflow)),
             md!(format!("*Runner:*\n{}", github_info.runner_os))
@@ -252,7 +268,8 @@ where
             .usergroups_users_list(&SlackApiUserGroupsUsersListRequest::new(SlackUserGroupId(
                 group.to_string(),
             )))
-            .await?;
+            .await
+            .with_context(|| format!("Failed to fetch user IDs from group. group: {}", group))?;
         user_ids.extend(res.users);
     }
 
@@ -292,6 +309,51 @@ fn is_authorized_user(user_id: &SlackUserId, authorized_users: &[SlackUserId]) -
     }
 
     authorized_users.contains(user_id)
+}
+
+async fn post_message<SDHC>(
+    session: &SlackClientSession<'_, SDHC>,
+    channel_id: &SlackChannelId,
+    content: SlackMessageContent,
+) -> Result<()>
+where
+    SDHC: SlackClientHttpConnector + Send,
+{
+    session
+        .chat_post_message(&SlackApiChatPostMessageRequest::new(
+            channel_id.clone(),
+            content,
+        ))
+        .await
+        .with_context(|| format!("Failed to post message. channel_id: {}", channel_id))?;
+
+    Ok(())
+}
+
+async fn update_message<SDHC>(
+    session: &SlackClientSession<'_, SDHC>,
+    channel_id: &SlackChannelId,
+    blocks: Vec<SlackBlock>,
+    ts: &SlackTs,
+) -> Result<()>
+where
+    SDHC: SlackClientHttpConnector + Send,
+{
+    session
+        .chat_update(&SlackApiChatUpdateRequest::new(
+            channel_id.clone(),
+            SlackMessageContent::new().with_blocks(blocks),
+            ts.clone(),
+        ))
+        .await
+        .with_context(|| {
+            format!(
+                "Failed to update message. channel_id: {}, ts: {}",
+                channel_id, ts,
+            )
+        })?;
+
+    Ok(())
 }
 
 #[cfg(test)]

@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 
 const INPUT_PREFIX: &str = "INPUT_";
 
@@ -19,9 +19,9 @@ fn get_input(name: &str, options: &InputOptions) -> Result<Option<String>> {
 
     if options.required {
         if v.is_none() {
-            return Err(anyhow::anyhow!("Input '{}' is required", name));
+            bail!("Input '{}' is required", name);
         } else if v.as_ref().unwrap().is_empty() {
-            return Err(anyhow::anyhow!("Input '{}' cannot be empty", name));
+            bail!("Input '{}' cannot be empty", name);
         }
     }
 
