@@ -216,7 +216,7 @@ fn build_header(inputs: &GitHubInputs) -> String {
             &inputs
                 .mention_to_groups
                 .iter()
-                .map(|group| format!("<!subteam^{}>", group))
+                .map(|group| group.to_slack_format())
                 .collect::<Vec<String>>()
                 .join(" "),
         );
