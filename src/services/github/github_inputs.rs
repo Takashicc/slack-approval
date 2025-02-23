@@ -19,17 +19,18 @@ pub fn read_github_inputs() -> Result<GitHubInputs> {
         bot_token: get_required_input("bot-token")?.into(),
         app_token: get_required_input("app-token")?.into(),
         channel_id: get_required_input("channel-id")?.into(),
-        mention_to_users: to_slack_id(get_list_input("mention-to-users")?),
-        mention_to_groups: to_slack_id(get_list_input("mention-to-groups")?),
-        authorized_users: to_slack_id(get_list_input("authorized-users")?),
-        authorized_groups: to_slack_id(get_list_input("authorized-groups")?),
+        mention_to_users: to_slack_user_id(get_list_input("mention-to-users")?),
+        mention_to_groups: to_slack_user_group_id(get_list_input("mention-to-groups")?),
+        authorized_users: to_slack_user_id(get_list_input("authorized-users")?),
+        authorized_groups: to_slack_user_group_id(get_list_input("authorized-groups")?),
     })
 }
 
-fn to_slack_id<T>(v: Vec<String>) -> Vec<T>
-where
-    T: From<String>,
-{
+fn to_slack_user_id(v: Vec<String>) -> Vec<SlackUserId> {
+    v.into_iter().map(|v| v.into()).collect()
+}
+
+fn to_slack_user_group_id(v: Vec<String>) -> Vec<SlackUserGroupId> {
     v.into_iter().map(|v| v.into()).collect()
 }
 
