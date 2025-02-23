@@ -2,6 +2,7 @@
 img
 target
 .env
+.env.example
 .gitignore
 .tagpr
 action.yml
