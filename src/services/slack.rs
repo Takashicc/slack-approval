@@ -229,26 +229,29 @@ fn build_content(github_inputs: &GitHubInputs, github_info: &GitHubInfo) -> Slac
     SlackMessageContent::new().with_blocks(slack_blocks![
         some_into(SlackSectionBlock::new().with_text(md!(build_header(github_inputs)))),
         some_into(SlackSectionBlock::new().with_fields(vec![
-            md!(format!("*Actor:*\n{}", github_info.github_actor)),
-            md!(format!("*Repository:*\n{}", github_info.repository_url())),
-            md!(format!("*Action:*\n{}", github_info.action_url())),
-            md!(format!("*Run ID:*\n{}", github_info.github_run_id)),
-            md!(format!("*Workflow:*\n{}", github_info.github_workflow)),
-            md!(format!("*Runner:*\n{}", github_info.runner_os))
+            md!(format!("👤*Actor:*\n{}", github_info.github_actor)),
+            md!(format!("📦*Repository:*\n{}", github_info.repository_url())),
+            md!(format!("🚀*Action:*\n{}", github_info.action_url())),
+            md!(format!("🆔*Run ID:*\n{}", github_info.github_run_id)),
+            md!(format!("🔄*Workflow:*\n{}", github_info.github_workflow)),
+            md!(format!("💻*Runner:*\n{}", github_info.runner_os))
         ])),
         some_into(SlackActionsBlock::new(slack_blocks!(
             some_into(
                 SlackBlockButtonElement::new(
                     SLACK_APPROVAL_APPROVE_ACTION_ID.into(),
-                    pt!("Approve")
+                    pt!("✅Approve")
                 )
                 .with_style("primary".into())
                 .with_value("approve".into())
             ),
             some_into(
-                SlackBlockButtonElement::new(SLACK_APPROVAL_REJECT_ACTION_ID.into(), pt!("Reject"))
-                    .with_style("danger".into())
-                    .with_value("reject".into())
+                SlackBlockButtonElement::new(
+                    SLACK_APPROVAL_REJECT_ACTION_ID.into(),
+                    pt!("❌Reject")
+                )
+                .with_style("danger".into())
+                .with_value("reject".into())
             )
         )))
     ])
