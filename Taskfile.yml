@@ -31,9 +31,9 @@ tasks:
   run:
     desc: Run the application
     cmds:
-      - cargo run
-    dotenv:
-      - .env
+      - env $(grep -v '^#' .env | tr '\n' ' ') cargo run
+    preconditions:
+      - sh: test -f .env
 
   lint:
     desc: Lint
