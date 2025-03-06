@@ -1,4 +1,4 @@
-FROM rust:1.85.0-alpine@sha256:1030547bd568497d69e41771ada279179f0613369dc54779e46a3f6f376b3020 AS base
+FROM rust:1.85.0-alpine@sha256:bea885d2711087e67a9f7a7cd1a164976f4c35389478512af170730014d2452a AS base
 
 LABEL org.opencontainers.image.source=https://github.com/Takashicc/slack-approval
 LABEL org.opencontainers.image.description="Custom action to send approval request to Slack."
