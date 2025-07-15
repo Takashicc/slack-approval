@@ -138,8 +138,7 @@ where
         info!("User is not authorized to approve: {}", user_id);
 
         let content = SlackMessageContent::new().with_text(format!(
-            "You are not authorized to approve this action: {}",
-            user_id
+            "You are not authorized to approve this action: {user_id}",
         ));
         post_message(session, &state.channel_id, content).await?;
 
@@ -177,8 +176,7 @@ where
         info!("User is not authorized to reject: {}", user_id);
 
         let content = SlackMessageContent::new().with_text(format!(
-            "You are not authorized to reject this action: {}",
-            user_id
+            "You are not authorized to reject this action: {user_id}",
         ));
         post_message(session, &state.channel_id, content).await?;
 
@@ -272,7 +270,7 @@ where
                 group.to_string(),
             )))
             .await
-            .with_context(|| format!("Failed to fetch user IDs from group. group: {}", group))?;
+            .with_context(|| format!("Failed to fetch user IDs from group. group: {group}"))?;
         user_ids.extend(res.users);
     }
 
@@ -328,7 +326,7 @@ where
             content,
         ))
         .await
-        .with_context(|| format!("Failed to post message. channel_id: {}", channel_id))?;
+        .with_context(|| format!("Failed to post message. channel_id: {channel_id}"))?;
 
     Ok(())
 }
@@ -349,12 +347,9 @@ where
             ts.clone(),
         ))
         .await
-        .with_context(|| {
-            format!(
-                "Failed to update message. channel_id: {}, ts: {}",
-                channel_id, ts,
-            )
-        })?;
+        .with_context(
+            || format!("Failed to update message. channel_id: {channel_id}, ts: {ts}",),
+        )?;
 
     Ok(())
 }
