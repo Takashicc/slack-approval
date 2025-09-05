@@ -11,7 +11,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - id: app-token
-        uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2
+        uses: actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b # v2
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.PRIVATE_KEY }}
@@ -21,6 +21,6 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
 
       - id: tagpr
-        uses: Songmu/tagpr@ebb5da0cccdb47c533d4b520ebc0acd475b16614 # v1
+        uses: Songmu/tagpr@5f88955ce2b34f19868a8c9cbe3baf6b73176f7b # v1
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
