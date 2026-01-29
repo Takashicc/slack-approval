@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 
 const INPUT_PREFIX: &str = "INPUT_";
 
@@ -20,7 +20,10 @@ fn get_input(name: &str, options: &InputOptions) -> Result<Option<String>> {
     if options.required {
         if v.is_none() {
             bail!("Input '{}' is required", name);
-        } else if v.as_ref().unwrap().is_empty() {
+        }
+        if let Some(v) = &v
+            && v.is_empty()
+        {
             bail!("Input '{}' cannot be empty", name);
         }
     }
@@ -68,10 +71,10 @@ mod tests {
 
     fn initialize_env_variable(name: &str, env_value: Option<&str>) {
         let env_key = format!("{}{}", INPUT_PREFIX, name.replace(" ", "_").to_uppercase());
-        std::env::remove_var(&env_key);
+        unsafe { std::env::remove_var(&env_key) };
 
         if let Some(val) = env_value {
-            std::env::set_var(&env_key, val);
+            unsafe { std::env::set_var(&env_key, val) };
         }
     }
 
