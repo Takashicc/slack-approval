@@ -71,10 +71,10 @@ mod tests {
 
     fn initialize_env_variable(name: &str, env_value: Option<&str>) {
         let env_key = format!("{}{}", INPUT_PREFIX, name.replace(" ", "_").to_uppercase());
-        std::env::remove_var(&env_key);
+        unsafe { std::env::remove_var(&env_key) };
 
         if let Some(val) = env_value {
-            std::env::set_var(&env_key, val);
+            unsafe { std::env::set_var(&env_key, val) };
         }
     }
 

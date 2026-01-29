@@ -40,13 +40,15 @@ mod tests {
 
     #[test]
     fn should_read_github_inputs() {
-        std::env::set_var("INPUT_BOT-TOKEN", "xoxb-bot-token");
-        std::env::set_var("INPUT_APP-TOKEN", "xapp-app-token");
-        std::env::set_var("INPUT_CHANNEL-ID", "C1234567890");
-        std::env::set_var("INPUT_MENTION-TO-USERS", "U000001, U000002");
-        std::env::set_var("INPUT_MENTION-TO-GROUPS", "G000001, G000002, G000003");
-        std::env::set_var("INPUT_AUTHORIZED-USERS", "U000010, U000011");
-        std::env::set_var("INPUT_AUTHORIZED-GROUPS", "G000031, G000032");
+        unsafe {
+            std::env::set_var("INPUT_BOT-TOKEN", "xoxb-bot-token");
+            std::env::set_var("INPUT_APP-TOKEN", "xapp-app-token");
+            std::env::set_var("INPUT_CHANNEL-ID", "C1234567890");
+            std::env::set_var("INPUT_MENTION-TO-USERS", "U000001, U000002");
+            std::env::set_var("INPUT_MENTION-TO-GROUPS", "G000001, G000002, G000003");
+            std::env::set_var("INPUT_AUTHORIZED-USERS", "U000010, U000011");
+            std::env::set_var("INPUT_AUTHORIZED-GROUPS", "G000031, G000032");
+        }
 
         let actual = read_github_inputs().unwrap();
         let expected = GitHubInputs {

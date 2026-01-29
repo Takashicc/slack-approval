@@ -35,12 +35,14 @@ mod tests {
 
     #[test]
     fn should_read_github_info() {
-        std::env::set_var("GITHUB_SERVER_URL", "https://github.com");
-        std::env::set_var("GITHUB_REPOSITORY", "octocat/Hello-World");
-        std::env::set_var("GITHUB_RUN_ID", "42");
-        std::env::set_var("GITHUB_WORKFLOW", "Hello-World-Workflow");
-        std::env::set_var("RUNNER_OS", "Linux");
-        std::env::set_var("GITHUB_ACTOR", "octocat");
+        unsafe {
+            std::env::set_var("GITHUB_SERVER_URL", "https://github.com");
+            std::env::set_var("GITHUB_REPOSITORY", "octocat/Hello-World");
+            std::env::set_var("GITHUB_RUN_ID", "42");
+            std::env::set_var("GITHUB_WORKFLOW", "Hello-World-Workflow");
+            std::env::set_var("RUNNER_OS", "Linux");
+            std::env::set_var("GITHUB_ACTOR", "octocat");
+        }
 
         let expected = GitHubInfo {
             github_server_url: "https://github.com".into(),
