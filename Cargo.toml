@@ -1,7 +1,7 @@
 [package]
 name = "slack-approval"
 version = "2.0.2"
-edition = "2021"
+edition = "2024"
 
 [profile.release]
 debug = false
