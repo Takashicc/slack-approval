@@ -38,6 +38,9 @@ pub async fn handle_slack_approval(
                 channel_id: github_inputs.channel_id.clone(),
                 api_token: token,
                 authorized_users,
+                // NOTE: Should authorize when user specifies the `authorized-users` or `authorized-groups`
+                should_authorize: !github_inputs.authorized_users.is_empty()
+                    || !github_inputs.authorized_groups.is_empty(),
             },
         ),
     );
@@ -61,6 +64,7 @@ struct SlackApprovalActionState {
     channel_id: SlackChannelId,
     api_token: SlackApiToken,
     authorized_users: Vec<SlackUserId>,
+    should_authorize: bool,
 }
 
 async fn handle_slack_interaction_events(
@@ -134,7 +138,7 @@ where
 {
     info!("Approve button clicked by: {}", user_id);
 
-    if !is_authorized_user(user_id, &state.authorized_users) {
+    if !is_authorized_user(user_id, &state.authorized_users, state.should_authorize) {
         info!("User is not authorized to approve: {}", user_id);
 
         let content = SlackMessageContent::new().with_text(format!(
@@ -172,7 +176,7 @@ where
 {
     info!("Reject button clicked by: {}", user_id);
 
-    if !is_authorized_user(user_id, &state.authorized_users) {
+    if !is_authorized_user(user_id, &state.authorized_users, state.should_authorize) {
         info!("User is not authorized to reject: {}", user_id);
 
         let content = SlackMessageContent::new().with_text(format!(
@@ -304,9 +308,19 @@ where
     Ok(authorized_users)
 }
 
-fn is_authorized_user(user_id: &SlackUserId, authorized_users: &[SlackUserId]) -> bool {
-    if authorized_users.is_empty() {
+fn is_authorized_user(
+    user_id: &SlackUserId,
+    authorized_users: &[SlackUserId],
+    should_authorize: bool,
+) -> bool {
+    if !should_authorize {
+        info!("Authorization skipped.");
         return true;
+    }
+
+    if authorized_users.is_empty() {
+        info!("No authorized users.");
+        return false;
     }
 
     authorized_users.contains(user_id)
@@ -361,15 +375,21 @@ mod tests {
     use slack_morphism::SlackUserId;
 
     #[rstest]
-    #[case("U1", vec![], true)]
-    #[case("U1", vec!["U2".into(), "U3".into()], false)]
-    #[case("U1", vec!["U2".into(), "U1".into()], true)]
+    #[case("U1", vec![], false, true)]
+    #[case("U1", vec![], true, false)]
+    #[case("U1", vec!["U2".into(), "U3".into()], true, false)]
+    #[case("U1", vec!["U2".into(), "U1".into()], true, true)]
     fn test_is_authorized_user(
         #[case] user_id: &str,
         #[case] authorized_users: Vec<SlackUserId>,
+        #[case] should_authorize: bool,
         #[case] expected: bool,
     ) {
-        let actual = is_authorized_user(&SlackUserId::new(user_id.into()), &authorized_users);
+        let actual = is_authorized_user(
+            &SlackUserId::new(user_id.into()),
+            &authorized_users,
+            should_authorize,
+        );
         assert_eq!(actual, expected);
     }
 }
