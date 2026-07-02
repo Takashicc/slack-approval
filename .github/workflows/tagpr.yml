@@ -11,16 +11,16 @@ jobs:
     timeout-minutes: 10
     steps:
       - id: app-token
-        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.PRIVATE_KEY }}
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           token: ${{ steps.app-token.outputs.token }}
 
       - id: tagpr
-        uses: Songmu/tagpr@78a926ba835e34721053309043aee696ba9c70b1 # v1
+        uses: Songmu/tagpr@e84001bd5dac8defa0c75b3913937d284a3b3660 # v1
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
